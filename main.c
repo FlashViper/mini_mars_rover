@@ -7,6 +7,8 @@
 int main(){
     initialize_rover_timing();
     initialize_rover_sensors();
+    initialize_rover_motors();
+    
     initialize_rover_logic();
     
     while(1){
