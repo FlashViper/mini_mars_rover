@@ -2,8 +2,10 @@
 #define ROVER_LOGIC
 
 #include "rover_sensors.c"
+#include "rover_motors.c"
 
 // learned about this handy trick from stackoverflow
+// it lets you pass around a function as a variable :)
 // https://stackoverflow.com/questions/9410/how-do-you-pass-a-function-as-a-parameter-in-c
 typedef void (*function)();
 
@@ -56,6 +58,7 @@ void state_sample_deposit(){
 
 void state_canyon(){
     // navegate the canyon
+    set_motor_speed(MOTOR_BOTH, float speed)
 }
 
 void state_antenna_seek(){
