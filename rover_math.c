@@ -20,4 +20,12 @@ int sign_int(int input){
     return 0;
 }
 
+int absolute_value_int(int input){
+    return (input >= 0) ? input : -input;
+}
+
+int absolute_value_float(float input){
+    return (input >= 0) ? input : -input;
+}
+
 #endif
