@@ -12,7 +12,6 @@ int main(){
     initialize_rover_logic();
     
     while(1){
-        rover_poll_sensors();
         rover_logic_run();
     }
     return 0;
