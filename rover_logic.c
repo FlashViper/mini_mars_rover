@@ -3,11 +3,9 @@
 
 #include "rover_sensors.c"
 #include "rover_motors.c"
+#include "constants.c"
 
-// learned about this handy trick from stackoverflow
-// it lets you pass around a function as a variable :)
-// https://stackoverflow.com/questions/9410/how-do-you-pass-a-function-as-a-parameter-in-c
-typedef void (*function)();
+#define SPEED_CANYON 
 
 void state_initial();
 void state_follow_line(); // might need a state_find_line for when we finish with other tasks
@@ -17,6 +15,7 @@ void state_canyon();
 void state_antenna_seek();
 void state_final();
 
+// function is a handy type that was defined in constants.c
 static function state = state_initial;
 
 void initialize_rover_logic(){
