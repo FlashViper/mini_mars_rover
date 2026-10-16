@@ -1,9 +1,9 @@
 #ifndef ROVER_LOGIC
 #define ROVER_LOGIC
 
-#include "rover_sensors.c"
-#include "rover_motors.c"
-#include "constants.c"
+#include "rover_sensors.h"
+#include "rover_motors.h"
+#include "constants.h"
 
 #define SPEED_CANYON 
 
@@ -29,6 +29,7 @@ void rover_logic_run(){
 void state_initial(){
     // follow line until you come to a crossroads
     // then turn left :)
+    rover_turn_degrees(90, 1.5, 0.0f);
 }
 
 void state_follow_line(){
@@ -57,7 +58,7 @@ void state_sample_deposit(){
 
 void state_canyon(){
     // navegate the canyon
-    set_motor_speed(MOTOR_BOTH, float speed)
+    set_motor_speed(MOTOR_BOTH, 0.0f);
 }
 
 void state_antenna_seek(){
