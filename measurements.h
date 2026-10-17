@@ -3,7 +3,8 @@
 
 // Degrees per rover step
 #define DEGREES_PER_STEP 1.8f
-#define STEPS_PER_REVOLUTION 200
+#define STEPS_MODIFIER 2
+#define STEPS_PER_REVOLUTION 200 * STEPS_MODIFIER
 #define WHEEL_DIAMETER 3.465f // inches
 #define WHEEL_RADIUS (WHEEL_DIAMETER / 2)
 

@@ -1,5 +1,6 @@
 #include "rover_sensors.h"
 #include "rover_logic.h"
+#include "constants.h"
 #include "rover_timing.h"
 #include "rover_motors.h"
 #include "debug.h"
@@ -22,26 +23,34 @@ int main(){
             
         }
         
-        toggle = 1;
+        enable_debug_led();
+        float distance_fwd = 1.0f;
+        rover_move_distance(distance_fwd, 3.0f, MOTOR_FWD);
+        rover_turn_degrees(90.0f, 2.5f, 0.0f, CLOCKWISE);
+        rover_move_distance(distance_fwd, 3.0f, MOTOR_FWD);
+        rover_turn_degrees(180.0f, 2.5f, 0.0f, CLOCKWISE);
+        rover_move_distance(distance_fwd, 3.0f, MOTOR_FWD);
+        disable_debug_led();
 
-        rover_turn_degrees(90.0f, 2.0, 0.0f);
 
-        while(!t2flag){
-            if(toggle){
-                if(!DEBUG_BUTTON_PRESSED){
-                    toggle = 0;
-                }
-            } else if (DEBUG_BUTTON_PRESSED) {
-                break;
-            }
+        // rover_turn_degrees(45.0f, 2.5f, 0.0f, CLOCKWISE);
+        
+        // while(!t2flag){
+        //     if(toggle){
+        //         if(!DEBUG_BUTTON_PRESSED){
+        //             toggle = 0;
+        //         }
+        //     } else if (DEBUG_BUTTON_PRESSED) {
+        //         break;
+        //     }
 
-        }
+        // }
 
-        disable_motor(MOTOR_BOTH);
+        // disable_motor_left();
+        // disable_motor_right();
     }
 
     return 0;
-    rover_turn_degrees(90.0f, 1.0f, 0.0f);
 
     // initialize_rover_logic();
     

@@ -68,7 +68,7 @@ void initialize_rover_timing() {
 }
 
 
-void _ISR _T1Interrupt (void){
+INTERRUPT _T1Interrupt (void){
     _T1IF = 0; // clear the interrupt flag
     flag_timer_1_elapsed = TRUE;
 }

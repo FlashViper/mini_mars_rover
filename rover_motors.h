@@ -37,12 +37,14 @@ static int motor_right_steps = 0;
 
 // external (used by other programs)
 void initialize_rover_motors();
-void rover_turn_degrees(float angle, float duration, float pivot_point);
+void rover_turn_degrees(float angle, float duration, float pivot_point, int direction);
 void enable_motor_left();
 void enable_motor_right();
 void disable_motor_left();
 void disable_motor_right();
 
+// internal (used inside this script)
+void turn_motor_ticks(int left_ticks, int right_ticks);
 
 // hardware (low level motor control)
 void motor_left_tick();
@@ -92,21 +94,44 @@ void initialize_rover_motors(){
 //     rover_turn_degrees(-45, 0.3, 0.5) --> turn 45 degrees about the left wheel
 //     rover_turn_degrees(180, 0.3, 2) --> make a wide 180 degree u-turn
 //     rover_turn_degrees(90, 0.3, -0.5) --> turn 90 degrees about a point close to the inside wheel
-void rover_turn_degrees(float angle, float duration, float pivot_point){
+void rover_turn_degrees(float angle, float duration, float pivot_point, int direction){
     float pivot_point_rescaled = 0.5 * (pivot_point + 1); // rescale to between 0 and 1
+    if (direction == CLOCKWISE){
+        MOTOR_RIGHT_DIRECTION = MOTOR_BWD;
+        MOTOR_LEFT_DIRECTION = MOTOR_FWD;
+    } else {
+        MOTOR_RIGHT_DIRECTION = MOTOR_FWD;
+        MOTOR_LEFT_DIRECTION = MOTOR_BWD;
+    }
 
     float left_distance = (PI / 180) * angle * WHEEL_TO_CENTER_DISTANCE * (1.0f - pivot_point_rescaled);
-    int left_ticks = STEPS_PER_REVOLUTION * left_distance / (WHEEL_DIAMETER * 2 * PI);
+    int left_ticks = STEPS_PER_REVOLUTION * left_distance / (WHEEL_DIAMETER * PI);
     int period_left = left_ticks / duration;
     SET_MOTOR_LEFT_PWM_PERIOD(period_left);
 
 
     float right_distance = (PI / 180) * angle * WHEEL_TO_CENTER_DISTANCE * (pivot_point_rescaled);
-    int right_ticks = STEPS_PER_REVOLUTION * right_distance / WHEEL_DIAMETER;
+    int right_ticks = STEPS_PER_REVOLUTION * right_distance / (WHEEL_DIAMETER * PI);
     int period_right = right_ticks / duration;
     SET_MOTOR_RIGHT_PWM_PERIOD(period_right);
 
-    
+    turn_motor_ticks(left_ticks, right_ticks);
+
+    disable_motor_left();
+    disable_motor_right();
+}
+
+void rover_move_distance(float distance, float time, int direction) {
+    MOTOR_LEFT_DIRECTION = direction;
+    MOTOR_RIGHT_DIRECTION = direction;
+    int ticks = STEPS_PER_REVOLUTION * distance / (WHEEL_DIAMETER * PI);
+    int period = ticks / time;
+    SET_MOTOR_LEFT_PWM_PERIOD(period);
+    SET_MOTOR_RIGHT_PWM_PERIOD(period);
+    turn_motor_ticks(ticks, ticks);
+
+    disable_motor_left();
+    disable_motor_right();
 }
 
 void enable_motor_left() {
@@ -134,13 +159,19 @@ void disable_motor_right() {
 void turn_motor_ticks(int ticks_left, int ticks_right){
     // do some timer mumbo jumbo to finish when it's done
     if(ticks_left > 0){
-        motor_right_steps = ticks_left;
-        MOTOR_RIGHT_INTERRUPT_ENABLE_FLAG = ENABLED;
+        motor_left_steps = ticks_left;
+        enable_motor_left();
+    } else {
+        motor_left_steps = 0;
+        disable_motor_left();
     }
 
     if(ticks_right > 0){
-        motor_left_steps = ticks_right;
+        motor_right_steps = ticks_right;
         enable_motor_right();
+    } else {
+        motor_right_steps = 0;
+        disable_motor_right();
     }
 
     // wait until both motors are finished
@@ -152,13 +183,10 @@ void turn_motor_ticks(int ticks_left, int ticks_right){
 // HARDWARE FUNCTIONS ----------------------------------------------------- 
 
 void motor_left_tick() {
-    enable_debug_led();
     motor_left_steps -= 1;
 
     if(motor_left_steps <= 0){
-        disable_debug_led();
-        motor_left_steps = 0;
-        MOTOR_LEFT_INTERRUPT_ENABLE_FLAG = DISABLED;
+        disable_motor_left();
     }
 }
 
