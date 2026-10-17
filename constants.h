@@ -13,6 +13,9 @@
 #define TRUE 1
 #define FALSE 0
 
+#define ENABLED 1
+#define DISABLED 0
+
 // learned about this handy trick from stackoverflow
 // it lets you pass around a function as a variable :)
 // https://stackoverflow.com/questions/9410/how-do-you-pass-a-function-as-a-parameter-in-c
