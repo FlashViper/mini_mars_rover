@@ -21,5 +21,7 @@
 // https://stackoverflow.com/questions/9410/how-do-you-pass-a-function-as-a-parameter-in-c
 typedef void (*function)();
 
+// use this to replace complicated interrupt declarations
+#define INTERRUPT void __attribute__((interrupt, no_auto_psv))
 
 #endif
