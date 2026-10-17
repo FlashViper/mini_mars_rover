@@ -83,7 +83,7 @@ void set_pwm_1_period(int pulses_per_second) {
 // cycle is between 0 (0%) and 1 (100%)
 void set_pwm_1_duty_cycle(float duty_cycle) {
     // clamp between 0 and 1
-    if(duty_cycle < 0.0f) pwm_1_duty_cycle = 0.0f;
+    if(duty_cycle < 0.001f) pwm_1_duty_cycle = 0.0f;
     else if (duty_cycle > 1.0f) pwm_1_duty_cycle = 1.0f;
     else pwm_1_duty_cycle = duty_cycle;
 
