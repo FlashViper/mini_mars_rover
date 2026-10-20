@@ -11,8 +11,8 @@
 #define MOTOR_LEFT_DIRECTION _LATA1
 #define MOTOR_LEFT_DISABLED _LATA0
 
-#define MOTOR_RIGHT_DIRECTION _LATB12
-#define MOTOR_RIGHT_DISABLED _LATB13
+#define MOTOR_RIGHT_DIRECTION _LATB9
+#define MOTOR_RIGHT_DISABLED _LATB8
 
 #define MOTOR_LEFT 0b01
 #define MOTOR_RIGHT 0b10
@@ -95,6 +95,8 @@ void initialize_rover_motors(){
 //     rover_turn_degrees(180, 0.3, 2) --> make a wide 180 degree u-turn
 //     rover_turn_degrees(90, 0.3, -0.5) --> turn 90 degrees about a point close to the inside wheel
 void rover_turn_degrees(float angle, float duration, float pivot_point, int direction){
+    enable_debug_led();
+
     float pivot_point_rescaled = 0.5 * (pivot_point + 1); // rescale to between 0 and 1
     if (direction == CLOCKWISE){
         MOTOR_RIGHT_DIRECTION = MOTOR_BWD;
@@ -122,6 +124,8 @@ void rover_turn_degrees(float angle, float duration, float pivot_point, int dire
 }
 
 void rover_move_distance(float distance, float time, int direction) {
+    disable_debug_led();
+
     MOTOR_LEFT_DIRECTION = direction;
     MOTOR_RIGHT_DIRECTION = direction;
     int ticks = STEPS_PER_REVOLUTION * distance / (WHEEL_DIAMETER * PI);

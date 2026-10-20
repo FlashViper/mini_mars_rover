@@ -23,14 +23,12 @@ int main(){
             
         }
         
-        enable_debug_led();
-        float distance_fwd = 1.0f;
+        float distance_fwd = 6.0f;
         rover_move_distance(distance_fwd, 3.0f, MOTOR_FWD);
-        rover_turn_degrees(90.0f, 2.5f, 0.0f, CLOCKWISE);
+        rover_turn_degrees(90.0f, 0.25f, 0.0f, CLOCKWISE);
         rover_move_distance(distance_fwd, 3.0f, MOTOR_FWD);
-        rover_turn_degrees(180.0f, 2.5f, 0.0f, CLOCKWISE);
+        rover_turn_degrees(180.0f, 0.5f, 0.0f, COUTERCLOCKWISE);
         rover_move_distance(distance_fwd, 3.0f, MOTOR_FWD);
-        disable_debug_led();
 
 
         // rover_turn_degrees(45.0f, 2.5f, 0.0f, CLOCKWISE);
