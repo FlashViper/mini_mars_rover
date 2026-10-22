@@ -69,10 +69,10 @@ void initialize_rover_motors(){
     
     // motor two (right):
     // A6 (pin 154: pwm signal (OC1)
-    // B12 (pin 23): motor direction
-    // B13 (pin 24): motor disable
-    _TRISB12 = OUTPUT;
-    _TRISB13 = OUTPUT;
+    // B9 (pin 23): motor direction
+    // B8 (pin 24): motor disable
+    _TRISB9 = OUTPUT;
+    _TRISB8 = OUTPUT;
     
 
     SET_MOTOR_LEFT_PWM_DUTY_CYCLE(0.5f);
@@ -95,26 +95,21 @@ void initialize_rover_motors(){
 //     rover_turn_degrees(180, 0.3, 2) --> make a wide 180 degree u-turn
 //     rover_turn_degrees(90, 0.3, -0.5) --> turn 90 degrees about a point close to the inside wheel
 void rover_turn_degrees(float angle, float duration, float pivot_point, int direction){
-    enable_debug_led();
+    MOTOR_RIGHT_DIRECTION = 1 - direction; // clockwise is 0, counterclockwise is 1 so this just inverts direction
+    MOTOR_LEFT_DIRECTION = direction;
 
     float pivot_point_rescaled = 0.5 * (pivot_point + 1); // rescale to between 0 and 1
-    if (direction == CLOCKWISE){
-        MOTOR_RIGHT_DIRECTION = MOTOR_BWD;
-        MOTOR_LEFT_DIRECTION = MOTOR_FWD;
-    } else {
-        MOTOR_RIGHT_DIRECTION = MOTOR_FWD;
-        MOTOR_LEFT_DIRECTION = MOTOR_BWD;
-    }
 
-    float left_distance = (PI / 180) * angle * WHEEL_TO_CENTER_DISTANCE * (1.0f - pivot_point_rescaled);
+    // angle is multiplied by 2 to fix a bug I think it's with the timers though
+    float left_distance = (PI / 180) * (angle * 2) * WHEEL_TO_CENTER_DISTANCE * (1.0f - pivot_point_rescaled);
     int left_ticks = STEPS_PER_REVOLUTION * left_distance / (WHEEL_DIAMETER * PI);
-    int period_left = left_ticks / duration;
+    int period_left = left_ticks / duration * 0.5;
     SET_MOTOR_LEFT_PWM_PERIOD(period_left);
 
 
-    float right_distance = (PI / 180) * angle * WHEEL_TO_CENTER_DISTANCE * (pivot_point_rescaled);
+    float right_distance = (PI / 180) * (angle * 2) * WHEEL_TO_CENTER_DISTANCE * (pivot_point_rescaled);
     int right_ticks = STEPS_PER_REVOLUTION * right_distance / (WHEEL_DIAMETER * PI);
-    int period_right = right_ticks / duration;
+    int period_right = right_ticks / duration * 0.5;
     SET_MOTOR_RIGHT_PWM_PERIOD(period_right);
 
     turn_motor_ticks(left_ticks, right_ticks);
@@ -124,10 +119,9 @@ void rover_turn_degrees(float angle, float duration, float pivot_point, int dire
 }
 
 void rover_move_distance(float distance, float time, int direction) {
-    disable_debug_led();
-
     MOTOR_LEFT_DIRECTION = direction;
     MOTOR_RIGHT_DIRECTION = direction;
+    
     int ticks = STEPS_PER_REVOLUTION * distance / (WHEEL_DIAMETER * PI);
     int period = ticks / time;
     SET_MOTOR_LEFT_PWM_PERIOD(period);
