@@ -3,9 +3,10 @@
     "configurations": [
         {
             "name": "default",
-            "id": "conf1",
+            "id": "",
             "device": "PIC24F16KA301",
             "imagePath": "./out/Mini_Mars_Rover/default.elf",
+            "toolProperties": "default-tool-base",
             "tool": "Snap",
             "packs": [
                 {
@@ -23,6 +24,11 @@
             "name": "default-XC-DSC",
             "type": "toolchain",
             "provider": "microchip.toolchains:xc-dsc@3.31.01",
+            "properties": {}
+        },
+        {
+            "name": "default-tool-base",
+            "type": "tool",
             "properties": {}
         }
     ],
