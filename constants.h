@@ -17,7 +17,7 @@
 #define DISABLED 0
 
 #define CLOCKWISE 0
-#define COUTERCLOCKWISE 1
+#define COUNTERCLOCKWISE 1
 
 #define MOTOR_FWD 0
 #define MOTOR_BWD 1
