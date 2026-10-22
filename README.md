@@ -1,6 +1,6 @@
 
 # Mini_Mars_Rover
-
+[i]This file was automatically generated when creating a new MPLAB project[/i]
 ## Structure
 
 | Path                               | Purpose                                                                                                                             |
