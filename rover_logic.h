@@ -4,6 +4,7 @@
 #include "rover_sensors.h"
 #include "rover_motors.h"
 #include "constants.h"
+#include "debug.h"
 
 #define SPEED_CANYON 
 
