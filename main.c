@@ -19,33 +19,13 @@ int main(){
     disable_debug_led();
 
     while(1){
-        while(!DEBUG_BUTTON_PRESSED){
-            
-        }
+        disable_debug_led();
+        wait_for_input();
+        enable_debug_led();
         
-        float distance_fwd = 6.0f;
-        rover_move_distance(distance_fwd, 3.0f, MOTOR_FWD);
-        rover_turn_degrees(90.0f, 0.25f, 0.0f, CLOCKWISE);
-        rover_move_distance(distance_fwd, 3.0f, MOTOR_FWD);
-        rover_turn_degrees(180.0f, 0.5f, 0.0f, COUTERCLOCKWISE);
-        rover_move_distance(distance_fwd, 3.0f, MOTOR_FWD);
+        run_milestone_5(14, 0.8f, 0.75f);
 
-
-        // rover_turn_degrees(45.0f, 2.5f, 0.0f, CLOCKWISE);
-        
-        // while(!t2flag){
-        //     if(toggle){
-        //         if(!DEBUG_BUTTON_PRESSED){
-        //             toggle = 0;
-        //         }
-        //     } else if (DEBUG_BUTTON_PRESSED) {
-        //         break;
-        //     }
-
-        // }
-
-        // disable_motor_left();
-        // disable_motor_right();
+        // rover_logic_run();
     }
 
     return 0;
