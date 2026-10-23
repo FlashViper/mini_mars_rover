@@ -7,8 +7,13 @@
 #define SENSOR_IR_R _TRISA1 // TO DO: DITTO
 //...
 
-static unsigned short sensor_ir_left = 0;
-static unsigned short sensor_ir_right = 0;
+static unsigned short sensor_distance_left = 0;
+static unsigned short sensor_distance_forward = 0;
+static unsigned short sensor_distance_right = 0;
+
+static unsigned short sensor_line_left = 0;
+static unsigned short sensor_line_center = 0;
+static unsigned short sensor_line_right = 0;
 
 void event_ir_right_changed();
 void event_ir_left_detected();
@@ -18,20 +23,24 @@ void initialize_rover_sensors(){
     // Initialize IR Sensor (right)
     // etc
 
-    sensor_ir_left = 0;
-    sensor_ir_right = 0;
+    sensor_distance_left = 0;
+    sensor_distance_right = 0;
 
     // initialize pin change interrupts
 }
 
 void event_ir_left_detected() {
-    sensor_ir_left = SENSOR_IR_L;
+    sensor_distance_left = SENSOR_IR_L;
 }
 
 void event_ir_right_changed() {
-    sensor_ir_right = SENSOR_IR_R;
+    sensor_distance_right = SENSOR_IR_R;
 }
 
+
+unsigned short is_on_line() {
+    return sensor_line_center || sensor_line_left || sensor_line_right;
+}
 
 // INTERRUPTS -------------------------------------------------
 
