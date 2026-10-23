@@ -82,7 +82,7 @@ void state_follow_line(){
     // Condition (4)
     if(flag_canyon_navigated && flag_collected_sample && flag_deposited_sample){
         state = state_antenna_seek;
-        return
+        return;
     }
 }
 
