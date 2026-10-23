@@ -14,7 +14,6 @@ unsigned short flag_canyon_navigated = FALSE;
 
 void state_initial();
 void state_follow_line(); // might need a state_find_line for when we finish with other tasks
-void state_find_line();
 void state_sample_collect();
 void state_sample_deposit();
 void state_canyon();
@@ -55,7 +54,7 @@ void state_follow_line(){
     );
 
     previous_error = error;
-
+        
     // EXIT CONDITIONS:
     // (1) line disappears + see wall ahead or to side --> state_canyon
     // (2) IR sensor detects something --> state_sample_collect
