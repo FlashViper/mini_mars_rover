@@ -10,5 +10,7 @@
 
 #define WHEEL_TO_CENTER_DISTANCE 7.75f / 2 // from onshape, check against real life though
 
+#define TILE_LENGTH 24.0 // inches
+
 
 #endif
