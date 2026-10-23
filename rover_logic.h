@@ -34,11 +34,21 @@ void state_initial(){
 }
 
 void state_follow_line(){
-    if (sensor_ir_left){
-        // do something
-    }
+    static float previous_error = 0.0f;
+    static float base_velocity = TILE_LENGTH * 1.25; // inches per second, so 1.25 tiles per second
+    float error = 0.333 * (sensor_line_right - sensor_line_left);
+
+    const float k_proportional = 75.0f;
+    const float k_derivative = 0; // = 125.0f;
     
-    // follow the line...duh
+    float speed_variation = (k_proportional * error) + (k_derivative * (error - previous_error));
+    
+    rover_set_constant_speed(
+        base_velocity - speed_variation, 
+        base_velocity + speed_variation
+    );
+
+    previous_error = error;
 
     // EXIT CONDITIONS:
     // line disappears + see wall ahead or to side --> state_canyon
