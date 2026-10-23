@@ -19,6 +19,7 @@ void state_sample_collect();
 void state_sample_deposit();
 void state_canyon();
 void state_antenna_seek();
+void state_find_line();
 void state_final();
 
 // function is a handy type that was defined in constants.c
