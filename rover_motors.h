@@ -6,7 +6,6 @@
 #include "constants.h"
 #include "rover_timing.h"
 #include "rover_math.h"
-#include "debug.h"
 
 #define MOTOR_LEFT_DIRECTION _LATA1
 #define MOTOR_LEFT_DISABLED _LATA0
@@ -46,8 +45,6 @@ void enable_motor_left();
 void enable_motor_right();
 void disable_motor_left();
 void disable_motor_right();
-
-// internal (used inside this script)
 void turn_motor_ticks(int left_ticks, int right_ticks);
 void set_individual_motor_speed(unsigned short motor_id, float speed);
 unsigned short convert_to_direction(float input);
@@ -73,13 +70,13 @@ void initialize_rover_motors(){
     _TRISB2 = OUTPUT;
     
     // motor two (right):
-    // A6 (pin 154: pwm signal (OC1)
-    // B9 (pin 23): motor direction
-    // B8 (pin 24): motor disable
+    // A6 (pin 14: pwm signal (OC1)
+    // B9 (pin 13): motor direction
+    // B8 (pin 12): motor disable
     _TRISB9 = OUTPUT;
     _TRISB8 = OUTPUT;
     
-
+    // set the default duty cycle to 0.5
     SET_MOTOR_LEFT_PWM_DUTY_CYCLE(0.5f);
     SET_MOTOR_RIGHT_PWM_DUTY_CYCLE(0.5f);
 
@@ -95,42 +92,70 @@ void initialize_rover_motors(){
 
 /*
 A function for performing specific manuvers (like turning 90 degrees)
-// angle is the angle it turns
-// duration is the time it turns the angle in (warning: may be limited by physical constraints)
-// pivot_point is the percentage distance that the pivot point is offset relative to the centerpoint between the two wheels
-// ex: rover_turn_degrees(90, 0.5, 0) --> turn 90 degrees about a the robot's center, lasting half a second total
-//     rover_turn_degrees(45, 0.3, 1.0) --> turn 45 degrees about the right wheel
-//     rover_turn_degrees(-45, 0.3, 0.5) --> turn 45 degrees about the left wheel
-//     rover_turn_degrees(180, 0.3, 2) --> make a wide 180 degree u-turn
-//     rover_turn_degrees(90, 0.3, -0.5) --> turn 90 degrees about a point close to the inside wheel
-void rover_turn_degrees(float angle, float duration, float pivot_point, int direction){
-    MOTOR_RIGHT_DIRECTION = 1 - direction; // clockwise is 0, counterclockwise is 1 so this just inverts direction
-    MOTOR_LEFT_DIRECTION = direction;
+Parameters:
+    angle: the angle the robot turns (in degrees)
+    duration: the time it turns the angle in (warning: may be limited by constraints of the pwm signal and the physical motors)
+    pivot_point: the percentage distance that the pivot point is offset relative to the centerpoint between the two wheels
 
+Examples: 
+    rover_turn_degrees(90, 0.5, 0) --> turn 90 degrees about a the robot's center, lasting half a second total
+    rover_turn_degrees(45, 0.3, 1.0) --> turn 45 degrees about the right wheel
+    rover_turn_degrees(-45, 0.3, 0.5) --> turn 45 degrees about the left wheel
+    rover_turn_degrees(180, 0.3, 2) --> make a wide 180 degree u-turn
+    rover_turn_degrees(90, 0.3, -0.5) --> turn 90 degrees about a point close to the inside wheel
+*/
+void rover_turn_degrees(float angle, float duration, float pivot_point, int direction){
+    // angle is multiplied by 2 to fix a bug I think it's with the timers though
+    float signed_angle = 2 * angle * ((direction == CLOCKWISE) ? 1 : -1);
     float pivot_point_rescaled = 0.5 * (pivot_point + 1); // rescale to between 0 and 1
 
-    // angle is multiplied by 2 to fix a bug I think it's with the timers though
-    float left_distance = (PI / 180) * (angle * 2) * WHEEL_TO_CENTER_DISTANCE * (1.0f - pivot_point_rescaled);
+    // convert angle into a distance to travel, then convert that into a number of ticks to turn
+    // formula is (angle in radians) * (distance from wheel to pivot point)
+    // ^^^ this is just the arc length formula if you're curious
+    float left_distance = (PI / 180) * (signed_angle) * WHEEL_TO_CENTER_DISTANCE * (1.0f - pivot_point_rescaled);
+    float right_distance = (PI / 180) * (-signed_angle) * WHEEL_TO_CENTER_DISTANCE * (pivot_point_rescaled);
+    MOTOR_LEFT_DIRECTION = convert_to_direction(left_distance);
+    MOTOR_RIGHT_DIRECTION = convert_to_direction(right_distance);
+
+    // turn distance into number of revolutions and then into steps
+    // formula is (steps per revolution) * (distance to travel / wheel circumferance)
     int left_ticks = STEPS_PER_REVOLUTION * left_distance / (WHEEL_DIAMETER * PI);
-    int period_left = left_ticks / duration * 0.5;
-    SET_MOTOR_LEFT_PWM_PERIOD(period_left);
-
-
-    float right_distance = (PI / 180) * (angle * 2) * WHEEL_TO_CENTER_DISTANCE * (pivot_point_rescaled);
     int right_ticks = STEPS_PER_REVOLUTION * right_distance / (WHEEL_DIAMETER * PI);
-    int period_right = right_ticks / duration * 0.5;
+    
+    // we know how many ticks each motor needs to turn but not how fast, so we divide
+    // the number of ticks by the duration to get the steps per second of the wheel
+    // We multiply by 0.5 at the end because it fixes shenanigans with the timer only firing
+    // at half of the oscilator speed, but I should probably move that to the function itself
+    int period_left = absolute_value_int(left_ticks) / duration * 0.5f;
+    int period_right = absolute_value_int(right_ticks) / duration * 0.5f;
+    SET_MOTOR_LEFT_PWM_PERIOD(period_left);
     SET_MOTOR_RIGHT_PWM_PERIOD(period_right);
 
+    // now that we've calculated the number of ticks to go we can call this handy function, which
+    // will wait until each motor finishes turning
     turn_motor_ticks(left_ticks, right_ticks);
 
     disable_motor_left();
     disable_motor_right();
 }
 
+/*
+A function for telling the rover to move a certain distance in a specific amount of time.
+Parameters:
+    distance: the distance to move (in inches)
+    time: the amount of time to move that distance in
+    direction: forward (MOTOR_FWD) or backward (MOTOR_BWD)
+
+Examples:
+    rover_move_distance(12, 1.0f, MOTOR_FWD) --> move forward 1 foot in one second
+    rover_move_distance(24, 1.5f, MOTOR_BWD) --> move backward 2 feet in 1.5 seconds
+*/
 void rover_move_distance(float distance, float time, int direction) {
+    // could do it based off of the sign of distance but I like that it's more explicit
     MOTOR_LEFT_DIRECTION = direction;
     MOTOR_RIGHT_DIRECTION = direction;
     
+    // formula: (steps per revolution) * (distance / circumferance)
     int ticks = STEPS_PER_REVOLUTION * distance / (WHEEL_DIAMETER * PI);
     int period = ticks / time;
     SET_MOTOR_LEFT_PWM_PERIOD(period);
@@ -168,8 +193,6 @@ void disable_motor_right() {
     SET_MOTOR_RIGHT_PWM_DUTY_CYCLE(0);
     MOTOR_RIGHT_INTERRUPT_ENABLE_FLAG = DISABLED;
 }
-
-// INTERNAL FUNCTIONS -----------------------------------------------------
 
 void turn_motor_ticks(int ticks_left, int ticks_right){
     // do some timer mumbo jumbo to finish when it's done
