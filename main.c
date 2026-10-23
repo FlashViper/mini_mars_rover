@@ -3,7 +3,7 @@
 #include "rover_timing.h"
 #include "rover_motors.h"
 #include "debug.h"
-
+#include "rover_milestones.h"
 
 int main(){
     initialize_rover_timing();
@@ -16,9 +16,8 @@ int main(){
     while(1){
         disable_debug_led();
         wait_for_input();
-        enable_debug_led();
         
-        run_milestone_5(14, 0.8f, 0.75f);
+        run_milestone_5(21, 0.8f, 0.4f);
 
         // rover_logic_run();
     }
