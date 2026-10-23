@@ -24,7 +24,7 @@ int absolute_value_int(int input){
     return (input >= 0) ? input : -input;
 }
 
-int absolute_value_float(float input){
+float absolute_value_float(float input){
     return (input >= 0) ? input : -input;
 }
 
