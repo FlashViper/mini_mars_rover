@@ -37,7 +37,11 @@ static int motor_right_steps = 0;
 
 // external (used by other programs)
 void initialize_rover_motors();
+void rover_move_distance(float distance, float time, int direction);
 void rover_turn_degrees(float angle, float duration, float pivot_point, int direction);
+void rover_set_constant_speed(float left_speed, float right_speed);
+
+// internal (used inside this script)
 void enable_motor_left();
 void enable_motor_right();
 void disable_motor_left();
@@ -45,12 +49,13 @@ void disable_motor_right();
 
 // internal (used inside this script)
 void turn_motor_ticks(int left_ticks, int right_ticks);
+void set_individual_motor_speed(unsigned short motor_id, float speed);
+unsigned short convert_to_direction(float input);
 
 // hardware (low level motor control)
 void motor_left_tick();
 void motor_right_tick();
 
-// TO DO: UPDATE WITH ACTUAL PINS
 void initialize_rover_motors(){
     // set motor pins as a digital output
     
@@ -82,10 +87,14 @@ void initialize_rover_motors(){
     // initialize timers and interrupts
     MOTOR_RIGHT_INTERRUPT_ENABLE_FLAG = DISABLED;
     MOTOR_LEFT_INTERRUPT_ENABLE_FLAG = DISABLED;
+
+    // disable motors by default
+    disable_motor_left();
+    disable_motor_right();
 }
 
-
-// utility function for performing specific manuvers (like turning 90 degrees)
+/*
+A function for performing specific manuvers (like turning 90 degrees)
 // angle is the angle it turns
 // duration is the time it turns the angle in (warning: may be limited by physical constraints)
 // pivot_point is the percentage distance that the pivot point is offset relative to the centerpoint between the two wheels
@@ -132,6 +141,14 @@ void rover_move_distance(float distance, float time, int direction) {
     disable_motor_right();
 }
 
+void rover_set_constant_speed(float left_speed, float right_speed){
+    set_individual_motor_speed(MOTOR_LEFT, left_speed);
+    set_individual_motor_speed(MOTOR_RIGHT, right_speed);
+}
+
+
+// INTERNAL FUNCTIONS -----------------------------------------------------
+
 void enable_motor_left() {
     SET_MOTOR_LEFT_PWM_DUTY_CYCLE(0.5);
     MOTOR_LEFT_INTERRUPT_ENABLE_FLAG = ENABLED;
@@ -173,9 +190,31 @@ void turn_motor_ticks(int ticks_left, int ticks_right){
     }
 
     // wait until both motors are finished
-    while(motor_right_steps > 0 && motor_left_steps > 0){
+    while(motor_right_steps > 0 && motor_left_steps > 0) {}
+}
 
+// Set the fixed speed of an individual motor. The speed will remain constant until 
+// a function like rover_turn_degrees is called, or this function is called again.
+void set_individual_motor_speed(unsigned short motor_id, float speed){
+    // divide speed by the wheel circumferance to get the number of revolutions per second
+    unsigned short direction = convert_to_direction(speed);
+    float revolutions_per_second = absolute_value_float(speed) / (PI * WHEEL_DIAMETER);
+    int ticks_per_second = revolutions_per_second * STEPS_PER_REVOLUTION;
+
+    if(motor_id & MOTOR_LEFT){
+        MOTOR_LEFT_DIRECTION = direction;
+        SET_MOTOR_LEFT_PWM_PERIOD(ticks_per_second);
     }
+
+    if (motor_id & MOTOR_RIGHT){
+        MOTOR_RIGHT_DIRECTION = direction;
+        SET_MOTOR_RIGHT_PWM_PERIOD(ticks_per_second);
+    }
+}
+
+unsigned short convert_to_direction(float input){
+    if(input < 0) return MOTOR_BWD;
+    else return MOTOR_FWD;
 }
 
 // HARDWARE FUNCTIONS ----------------------------------------------------- 
