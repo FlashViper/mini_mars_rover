@@ -3,6 +3,7 @@
 
 #include "rover_sensors.h"
 #include "rover_motors.h"
+#include "line_following.h"
 #include "constants.h"
 #include "debug.h"
 
@@ -39,36 +40,7 @@ void state_initial(){
 }
 
 void state_follow_line(){
-    static float previous_error = 0.0f;
-    // we have to convert to floats because if not the motor will turn into a banshee
-    // I think it's because they're unsigned and subtracting them causes an integer overflow
-    // then it converts that to an error
-    // so without the (float)s it tries to set error to like 16,000 whenever the left sensor is on lol
-    float error = (float)sensor_line_right - (float)sensor_line_left + (float)sensor_line_center * ((float)sensor_line_right - (float)sensor_line_left);
-    error /= 2.0f;
-    
-    // kp = 9, kd = 0.05 works well for a base velocity of 14 inches per second
-    // working on kp = 12, kd = 0 for velocity = 35
-    const float base_velocity = 14.0f;
-    const float k_proportional = 9.0f;
-    const float k_derivative = 0.05f;
-
-    static float left_velocity = base_velocity;
-    static float right_velocity = base_velocity;
-    
-    float speed_variation = (k_proportional * error) + (k_derivative * (error - previous_error));
-    const float damping = 0;
-    float new_left_velocity = damping * left_velocity + (1 - damping) * (base_velocity + speed_variation); 
-    float new_right_velocity = damping * right_velocity + (1 - damping) * (base_velocity - speed_variation); 
-    
-    rover_set_constant_speed(
-        new_left_velocity, 
-        new_right_velocity
-    );
-
-    left_velocity = new_left_velocity;
-    left_velocity = new_right_velocity;
-    previous_error = error;
+    follow_line_with_pid(&line_follower_fast_reckless);
     
         
     // EXIT CONDITIONS:
