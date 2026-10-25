@@ -15,12 +15,6 @@ void stall_1s(){
     rover_move_distance(1.0f, 1.0f, MOTOR_BWD);
 }
 
-void wait_for_input(){
-    while(!DEBUG_BUTTON_PRESSED){
-        
-    }
-}
-
 void test_qrd_sensor(){
     while(1){
         static float speed = 20.0f;

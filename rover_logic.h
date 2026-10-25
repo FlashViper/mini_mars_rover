@@ -29,6 +29,12 @@ void initialize_rover_logic(){
     state = state_initial;
 }
 
+void wait_for_input(){
+    while(!DEBUG_BUTTON_PRESSED){
+        
+    }
+}
+
 void rover_logic_run(){
     state();
 }
