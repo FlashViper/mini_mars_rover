@@ -44,25 +44,32 @@ void state_follow_line(){
     // I think it's because they're unsigned and subtracting them causes an integer overflow
     // then it converts that to an error
     // so without the (float)s it tries to set error to like 16,000 whenever the left sensor is on lol
-    float error = (float)sensor_line_right - (float)sensor_line_left;
+    float error = (float)sensor_line_right - (float)sensor_line_left + (float)sensor_line_center * ((float)sensor_line_right - (float)sensor_line_left);
+    error /= 2.0f;
     
     // kp = 9, kd = 0.05 works well for a base velocity of 14 inches per second
-    const float base_velocity = 40.0f;
-    const float k_proportional = 25.0f;
-    const float k_derivative = 0.14f;
+    // working on kp = 12, kd = 0 for velocity = 35
+    const float base_velocity = 14.0f;
+    const float k_proportional = 9.0f;
+    const float k_derivative = 0.05f;
 
     static float left_velocity = base_velocity;
     static float right_velocity = base_velocity;
     
     float speed_variation = (k_proportional * error) + (k_derivative * (error - previous_error));
-    
+    const float damping = 0;
+    float new_left_velocity = damping * left_velocity + (1 - damping) * (base_velocity + speed_variation); 
+    float new_right_velocity = damping * right_velocity + (1 - damping) * (base_velocity - speed_variation); 
     
     rover_set_constant_speed(
-        base_velocity + speed_variation, 
-        base_velocity - speed_variation
+        new_left_velocity, 
+        new_right_velocity
     );
 
+    left_velocity = new_left_velocity;
+    left_velocity = new_right_velocity;
     previous_error = error;
+    
         
     // EXIT CONDITIONS:
     // (1) line disappears + see wall ahead or to side --> state_canyon
