@@ -12,5 +12,6 @@
         "gdb",
         "gdbtarget",
         "mplab-core-da"
-    ]
+    ],
+    "mplab.project.workspace.appendScmIgnore": "never"
 }
