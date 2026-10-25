@@ -40,17 +40,26 @@ void state_initial(){
 
 void state_follow_line(){
     static float previous_error = 0.0f;
-    static float base_velocity = TILE_LENGTH * 1.25; // inches per second, so 1.25 tiles per second
-    float error = 0.333 * (sensor_line_right - sensor_line_left);
+    // we have to convert to floats because if not the motor will turn into a banshee
+    // I think it's because they're unsigned and subtracting them causes an integer overflow
+    // then it converts that to an error
+    // so without the (float)s it tries to set error to like 16,000 whenever the left sensor is on lol
+    float error = (float)sensor_line_right - (float)sensor_line_left;
+    
+    // kp = 9, kd = 0.05 works well for a base velocity of 14 inches per second
+    const float base_velocity = 40.0f;
+    const float k_proportional = 25.0f;
+    const float k_derivative = 0.14f;
 
-    const float k_proportional = 75.0f;
-    const float k_derivative = 0; // = 125.0f;
+    static float left_velocity = base_velocity;
+    static float right_velocity = base_velocity;
     
     float speed_variation = (k_proportional * error) + (k_derivative * (error - previous_error));
     
+    
     rover_set_constant_speed(
-        base_velocity - speed_variation, 
-        base_velocity + speed_variation
+        base_velocity + speed_variation, 
+        base_velocity - speed_variation
     );
 
     previous_error = error;

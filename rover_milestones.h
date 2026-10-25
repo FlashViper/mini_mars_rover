@@ -3,9 +3,16 @@
 
 #include "debug.h"
 #include "rover_motors.h"
+#include "rover_sensors.h"
+#include "rover_logic.h"
 
 void one_tile(){
     rover_move_distance(24.0f, 1.0f, MOTOR_FWD);
+}
+
+void stall_1s(){
+    // move backward really slowly to give user time to take their hand off the button
+    rover_move_distance(1.0f, 1.0f, MOTOR_BWD);
 }
 
 void wait_for_input(){
@@ -14,12 +21,25 @@ void wait_for_input(){
     }
 }
 
+void test_qrd_sensor(){
+    while(1){
+        static float speed = 20.0f;
+        rover_set_constant_speed(sensor_line_left * speed, sensor_line_right * speed);
+    }
+}
+
+void test_line_follow(){
+    stall_1s();
+    while(1){
+        state_follow_line();
+    }
+}
+
 void run_milestone_5(float distance_fwd, float time_fwd, float time_turn){
     
     enable_debug_led();
     
-    // move backward really slowly to give user time to take their hand off
-    rover_move_distance(1.0f, 1.0f, MOTOR_BWD);
+    stall_1s();
 
     // forward
     rover_move_distance(distance_fwd, time_fwd, MOTOR_FWD);

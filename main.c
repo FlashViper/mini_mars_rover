@@ -17,8 +17,7 @@ int main(){
         disable_debug_led();
         wait_for_input();
         
-        run_milestone_5(21, 0.8f, 0.4f);
-
+        test_line_follow();
         // rover_logic_run();
     }
     return 0;

@@ -154,6 +154,8 @@ void rover_move_distance(float distance, float time, int direction) {
     // could do it based off of the sign of distance but I like that it's more explicit
     MOTOR_LEFT_DIRECTION = direction;
     MOTOR_RIGHT_DIRECTION = direction;
+    enable_motor_left();
+    enable_motor_right();
     
     // formula: (steps per revolution) * (distance / circumferance)
     int ticks = STEPS_PER_REVOLUTION * distance / (WHEEL_DIAMETER * PI);
@@ -225,11 +227,13 @@ void set_individual_motor_speed(unsigned short motor_id, float speed){
     int ticks_per_second = revolutions_per_second * STEPS_PER_REVOLUTION;
 
     if(motor_id & MOTOR_LEFT){
+        enable_motor_left();
         MOTOR_LEFT_DIRECTION = direction;
         SET_MOTOR_LEFT_PWM_PERIOD(ticks_per_second);
     }
 
     if (motor_id & MOTOR_RIGHT){
+        enable_motor_right();
         MOTOR_RIGHT_DIRECTION = direction;
         SET_MOTOR_RIGHT_PWM_PERIOD(ticks_per_second);
     }
@@ -246,7 +250,8 @@ void motor_left_tick() {
     motor_left_steps -= 1;
 
     if(motor_left_steps <= 0){
-        disable_motor_left();
+        motor_left_steps = 0;
+        MOTOR_LEFT_INTERRUPT_ENABLE_FLAG = DISABLED;
     }
 }
 
