@@ -58,11 +58,11 @@ float calculate_line_sensor_error() {
     TABLE OF OUTPUTS:
     Code  | Error calculation                    | Error | Action     
     000 --> stop robot                               0    
-    100 --> error = (-1 + (1 - 0) * (-1)) / 2       -1     HARD RIGHT
-    001 --> error = (1 + (1 - 0) * (1)) / 2          1     HARD LEFT
-    110 --> error = (-1 + (1 - 1) * (-1)) / 2      -0.5    slight right
-    011 --> error = (1 + (1 - 1) * (1)) / 2         0.5    slight left
-    101 (should never happen)                     ||||||||||||||||||||||
+    100 --> error = (-1 + (1 - 0) * (-1)) / 2       -1            HARD RIGHT
+    001 --> error = (1 + (1 - 0) * (1)) / 2          1            HARD LEFT
+    110 --> error = (-1 + (1 - 1) * (-1)) / 2      -0.5           slight right
+    011 --> error = (1 + (1 - 1) * (1)) / 2         0.5           slight left
+    101 (should never happen)                    ||||||||||||||||||||||||||||||||||||||
     111 --> error = (0 + (1 - 1) * 0) / 2            0     STRAIT AND NARROW PATH BABY
 
     Also, I know this table looks like it was written by a llm. I promise it wasn't. It was written by me.
