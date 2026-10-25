@@ -46,7 +46,41 @@ void state_initial(){
 }
 
 void state_follow_line(){
-    follow_line_with_pid(&line_follower_fast_reckless);
+    last_signifigant_state = state_follow_line;
+
+    if(!is_on_line()){
+        state = state_find_line;
+        return;
+    }
+
+    // we want this to be FAST. But faster controllers are more reckless and miss the line often
+    // therefore, we need to switch dynamically between severeal pid values based on how curvy the path is getting
+
+    // Here's the plan: we have a 'reckless mode' switch that we can turn off whenever we're worried about 
+    // the state of our robot's soul. Turn it off, and it'll follow the line carefully. Turn it on, and the robot
+    // will follow the line as fast as robot-ly possible. But if the robot gets too far away from the line, we
+    // panic and flip the switch back to the careful mode. Once the robot is going in a straight enough direction for
+    // long enough, we can 
+
+    // Other ideas:
+    // robot moves in sprints: each tile, move ~6 inches carefully, 
+    // then if the tile looks straight, switch to the fast pid until you reach the next tile, otherwise move carefully
+    // ^^^ this idea is kinda fire not gonna lie. I might try coding that and see which one turns out better
+
+    const unsigned short reckless_mode_allowed = ENABLED; // hard-coded so we can switch it off in software
+    unsigned short reckless_mode = DISABLED; // disabled at the start
+
+    // How do we measure if the robot is going off course? The pid function returns the speed variance, which
+    // is half of the difference between the speed (in inches per second) of each wheel
+    // if we average that over a very long time window, we can see how different the speeds of the wheels have been
+    // on average for the last while, which is a pretty good indicator of if we've had to turn a lot
+    static float avg_speed_variance = 9999; // set to a large number for now
+    const float speed_threshold = 1.0f; // probably needs to be bigger
+    const float weight = 0.98f; // might need to be ~0.999f because of the oscilator speed
+    float speed_variance = 0.0f;
+    
+    if(reckless_mode_allowed && reckless_mode){
+        speed_variance = follow_line_with_pid(&line_follower_fast_reckless);
     
         
     // EXIT CONDITIONS:
