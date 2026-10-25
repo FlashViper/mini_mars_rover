@@ -80,7 +80,7 @@ float calculate_line_sensor_error() {
 }
 
 
-void follow_line_with_pid(const PID *pid_parameters){
+float follow_line_with_pid(const PID *pid_parameters){
     static float previous_error = 0.0f;
 
     float error = calculate_line_sensor_error();
@@ -92,6 +92,7 @@ void follow_line_with_pid(const PID *pid_parameters){
     );
 
     previous_error = error;
+return speed_adjustment;
 }
 
 #endif
