@@ -20,10 +20,12 @@ void state_sample_deposit();
 void state_canyon();
 void state_antenna_seek();
 void state_find_line();
+void state_panic();
 void state_final();
 
 // function is a handy type that was defined in constants.c
 static function state = state_initial;
+static function last_signifigant_state = state_follow_line; // the state it will fall back to in an emergency
 
 void initialize_rover_logic(){
     state = state_initial;
@@ -81,8 +83,21 @@ void state_follow_line(){
     
     if(reckless_mode_allowed && reckless_mode){
         speed_variance = follow_line_with_pid(&line_follower_fast_reckless);
-    
         
+        if(!sensor_line_center || absolute_value_float(avg_speed_variance) > speed_threshold) {
+            reckless_mode = DISABLED;
+        }
+    } else {
+        speed_variance = follow_line_with_pid(&line_follower_slow_accurate);
+
+        if (sensor_line_center && absolute_value_float(avg_speed_variance) < speed_threshold) {
+            reckless_mode = ENABLED;
+        }
+    }
+    
+    // might have to move this to a timer-based interrupt, like _T5Interrupt or something
+    avg_speed_variance = weight * avg_speed_variance + (1 - weight) * speed_variance;
+    
     // EXIT CONDITIONS:
     // (1) line disappears + see wall ahead or to side --> state_canyon
     // (2) IR sensor detects something --> state_sample_collect
@@ -133,6 +148,24 @@ void state_antenna_seek(){
     // navegate to the lander
     // then point antenna up at the thing
     // can't be that hard right?
+}
+
+void state_find_line(){
+    int not_on_line_cycles = 0;
+    while(not_on_line_cycles < 3) {
+        rover_move_distance(4.0, 0.3f, MOTOR_BWD);
+        not_on_line_cycles++;
+
+        if(is_on_line()){
+            state = last_signifigant_state;
+        }
+    }
+    
+    state = state_panic;
+}
+
+void state_panic(){
+
 }
 
 void state_final(){
