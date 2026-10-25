@@ -65,7 +65,7 @@ float calculate_line_sensor_error() {
     101 (should never happen)                    ||||||||||||||||||||||||||||||||||||||
     111 --> error = (0 + (1 - 1) * 0) / 2            0     STRAIT AND NARROW PATH BABY
 
-    Also, I know this table looks like it was written by a llm. I promise it wasn't. It was written by me.
+    Also, I know this table looks like it was written by an llm. I promise it wasn't. It was written by me.
     You can check the git commit messages. Why did I type this all out? Two reasons:
     (1) to double check my math
     (2) to explain my bonkers duct-tape math to my teammates
