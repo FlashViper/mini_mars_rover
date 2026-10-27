@@ -29,7 +29,7 @@ typedef struct {
 // k_p tuned pretty well already. k_d needs to be tuned
 // k_i likely not needed
 const PID line_follower_slow_accurate = {
-    14.0f, 9.0f, 0.05f, 0
+    16.0f, 15.0f, 0.5f, 0
 };
 
 // 

@@ -25,7 +25,8 @@ void test_qrd_sensor(){
 void test_line_follow(){
     stall_1s();
     while(1){
-        state_follow_line();
+        // state_follow_line();
+        follow_line_with_pid(&line_follower_slow_accurate);
     }
 }
 
