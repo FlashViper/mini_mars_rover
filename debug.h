@@ -4,13 +4,13 @@
 #include "xc.h"
 #include "constants.h"
 
-#define DEBUG_LED _LATB14
+#define DEBUG_LED _LATB7
 #define DEBUG_BUTTON_PRESSED PORTAbits.RA2
 unsigned int debug_led_enabled = FALSE;
 
 void initialize_debug(){
-    _ANSB14 = DIGITAL;
-    _TRISB14 = OUTPUT;
+    // _ANSB14 = DIGITAL;
+    _TRISB7 = OUTPUT;
 
     _ANSA2 = DIGITAL;
     _TRISA2 = INPUT;

@@ -17,25 +17,31 @@ static unsigned short sensor_line_left = 0;
 static unsigned short sensor_line_center = 0;
 static unsigned short sensor_line_right = 0;
 
-void event_ir_right_changed();
-void event_ir_left_detected();
+void update_line_sensors();
 
 void initialize_rover_sensors(){
-    // set up qrd sensors to use change notifications
+    // set up qrd sensors to fire the change notification interrupt whenever
+    // one of them flips from high to low
     // (see page 166 of packet I pretty much copied it word for word)
     
     // Initialize color sensor (left)
     _ANSB15 = DIGITAL;
     _TRISB15 = INPUT; 
-    _CN11IE = ENABLED; // enable interrupt on pin 18 (Change notification 11)
+    _CN11IE = ENABLED; // enable change interrupt on pin 18 (Change notification 11)
     _CN11PUE = DISABLED; // disable pull up resistor
     _CN11PDE = DISABLED; // disable pull down resistor
     
     _ANSB14 = DIGITAL;
     _TRISB14 = INPUT; 
-    _CN12IE = ENABLED; // enable interrupt on pin 17 (Change notification 12)
+    _CN12IE = ENABLED; // enable change interrupt on pin 17 (Change notification 12)
     _CN12PUE = DISABLED; // disable pull up resistor
-    _CN12PDE = DISABLED; // disable pull down resistor
+    _CN12PDE = DISABLED; // disable pull down resistor (we already have one)
+
+    _ANSB13 = DIGITAL;
+    _TRISB13 = INPUT;
+    _CN13IE = ENABLED;
+    _CN13PUE = DISABLED;
+    _CN13PDE = DISABLED;
     
     // Enable change notification interrupts
     _CNIE = ENABLED;
@@ -46,20 +52,20 @@ void initialize_rover_sensors(){
     // Initialize IR Sensor (right)
     // etc
 
-    sensor_distance_left = 0;
-    sensor_distance_right = 0;
+    update_line_sensors();
 
     // initialize pin change interrupts
 }
 
-void event_ir_left_detected() {
-    sensor_distance_left = SENSOR_IR_L;
+void update_line_sensors(){
+    // QRD sensors
+    // invert because high voltage means it's over a dark surface
+    // (condition) ? <true value> : <false value> is a shortcut for using if statements
+    sensor_line_left = _RB15 ? FALSE : TRUE; 
+    sensor_line_right = _RB14 ? FALSE : TRUE;
+    sensor_line_center = _RB13 ? FALSE : TRUE;
+    // sensor_line_center = _RB13 ? FALSE : TRUE;
 }
-
-void event_ir_right_changed() {
-    sensor_distance_right = SENSOR_IR_R;
-}
-
 
 unsigned short is_on_line() {
     return sensor_line_center || sensor_line_left || sensor_line_right;
@@ -70,10 +76,7 @@ unsigned short is_on_line() {
 // see pages 165 and 166 of packet
 INTERRUPT CHANGE_NOTIFICATION {
     _CNIF = 0; // clear interrupt flag
-    // QRD sensors
-    // invert because high voltage means dark space
-    sensor_line_left = _RB15 ? FALSE : TRUE; 
-    sensor_line_right = _RB14 ? FALSE : TRUE;
+    update_line_sensors();
 }
 
 #endif

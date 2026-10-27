@@ -29,7 +29,9 @@ static int pwm_2_period;
 static float pwm_1_duty_cycle = 0.5;
 static float pwm_2_duty_cycle = 0.5;
 
-int flag_timer_1_elapsed = 1;
+unsigned short flag_timer_1_elapsed = FALSE;
+unsigned short flag_timer_1_counting = FALSE;
+
 
 void set_pwm_1_period(int pulses_per_second);
 void set_pwm_1_duty_cycle(float duty_cycle); // cycle is between 0 (0%) and 1 (100%)
@@ -54,7 +56,6 @@ void initialize_rover_timing() {
     // Initialize pwm one on pin [XX]
     OC1CON1 = 0x1c06; // magic registers
     OC1CON2 = 0x001f; // ditto
-
     // set pwm pulses to timer 5 instead of built in oscilator
     OC1CON1bits.OCTSEL = 0b011;
     
@@ -72,9 +73,21 @@ void initialize_rover_timing() {
 }
 
 
+void initialize_timer_1(float time){
+    TIMER_1.TON = ENABLED;
+    TMR1 = 0; // reset timer
+    // seconds / time cycle --> timer ticks / time cycle
+    // (seconds / time cycle) * (cpu ticks / second) * (timer ticks / cpu tick)
+    PR1 = time * (OSCILATOR_SPEED / 2) / PRESCALE_64;
+    flag_timer_1_elapsed = FALSE;
+    flag_timer_1_counting = TRUE;
+}
+
+
 INTERRUPT _T1Interrupt (void){
     _T1IF = 0; // clear the interrupt flag
     flag_timer_1_elapsed = TRUE;
+    flag_timer_1_counting = FALSE;
 }
 
 

@@ -106,7 +106,7 @@ Examples:
 */
 void rover_turn_degrees(float angle, float duration, float pivot_point, int direction){
     // angle is multiplied by 2 to fix a bug I think it's with the timers though
-    float signed_angle = 2 * angle * ((direction == CLOCKWISE) ? 1 : -1);
+    float signed_angle = 2.0f * angle * ((direction == CLOCKWISE) ? 1.0f : -1.0f);
     float pivot_point_rescaled = 0.5 * (pivot_point + 1); // rescale to between 0 and 1
 
     // convert angle into a distance to travel, then convert that into a number of ticks to turn
@@ -131,9 +131,9 @@ void rover_turn_degrees(float angle, float duration, float pivot_point, int dire
     SET_MOTOR_LEFT_PWM_PERIOD(period_left);
     SET_MOTOR_RIGHT_PWM_PERIOD(period_right);
 
-    // now that we've calculated the number of ticks to go we can call this handy function, which
-    // will wait until each motor finishes turning
-    turn_motor_ticks(left_ticks, right_ticks);
+    // now that we've calculated the number of ticks to go we can call this handy function, 
+    // which will wait until each motor finishes turning
+    turn_motor_ticks(absolute_value_int(left_ticks), absolute_value_int(right_ticks));
 
     disable_motor_left();
     disable_motor_right();

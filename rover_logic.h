@@ -7,14 +7,14 @@
 #include "constants.h"
 #include "debug.h"
 
-#define SPEED_CANYON 
 
+// prigress flags (set to true when we complete part of the course)
 unsigned short flag_collected_sample = FALSE;
 unsigned short flag_deposited_sample = FALSE;
 unsigned short flag_canyon_navigated = FALSE;
 
 void state_initial();
-void state_follow_line(); // might need a state_find_line for when we finish with other tasks
+void state_follow_line();
 void state_sample_collect();
 void state_sample_deposit();
 void state_canyon();
@@ -28,6 +28,9 @@ static function state = state_initial;
 static function last_signifigant_state = state_follow_line; // the state it will fall back to in an emergency
 
 void initialize_rover_logic(){
+    flag_collected_sample = FALSE;
+    flag_deposited_sample = FALSE;
+    flag_canyon_navigated = FALSE;
     state = state_initial;
 }
 
@@ -44,16 +47,31 @@ void rover_logic_run(){
 void state_initial(){
     // follow line until you come to a crossroads
     // then turn left :)
-    rover_turn_degrees(90, 1.5, 0.0f, CLOCKWISE);
+    enable_debug_led();
+    static int flag_found_line = FALSE;
+
+    last_signifigant_state = state_initial;
+    rover_set_constant_speed(14.0f, 14.0f);
+
+    if(!flag_found_line){
+        if(is_on_line()) 
+            flag_found_line = TRUE;
+
+        return;
+    } else if (is_on_line()) {
+        follow_line_with_pid(&line_follower_slow_accurate); // change to reckless later ?
+        // follow_line_with_pid(&line_follower_fast_reckless);
+        return;
+    }
+
+    disable_debug_led();
+    // rover_move_distance(4, 0.3, MOTOR_BWD);
+    rover_turn_degrees(95, 0.24f, 0.0f, COUNTERCLOCKWISE);
+    state = state_follow_line;
 }
 
 void state_follow_line(){
     last_signifigant_state = state_follow_line;
-
-    if(!is_on_line()){
-        state = state_find_line;
-        return;
-    }
 
     // we want this to be FAST. But faster controllers are more reckless and miss the line often
     // therefore, we need to switch dynamically between severeal pid values based on how curvy the path is getting
@@ -83,11 +101,13 @@ void state_follow_line(){
     
     if(reckless_mode_allowed && reckless_mode){
         speed_variance = follow_line_with_pid(&line_follower_fast_reckless);
-        
+        disable_debug_led();
+
         if(!sensor_line_center || absolute_value_float(avg_speed_variance) > speed_threshold) {
             reckless_mode = DISABLED;
         }
     } else {
+        enable_debug_led();
         speed_variance = follow_line_with_pid(&line_follower_slow_accurate);
 
         if (sensor_line_center && absolute_value_float(avg_speed_variance) < speed_threshold) {
@@ -127,6 +147,13 @@ void state_follow_line(){
         state = state_antenna_seek;
         return;
     }
+
+    // Finally, if none of the above conditions triggered and we still can't find the line,
+    // switch states to state_find_line
+    if(!is_on_line()){
+        state = state_find_line;
+        return;
+    }
 }
 
 void state_sample_collect(){
@@ -140,8 +167,29 @@ void state_sample_deposit(){
 }
 
 void state_canyon(){
-    // navegate the canyon
-    // set_motor_speed(MOTOR_BOTH, 0.0f);
+    // navegate the canyonx
+    const float canyon_speed = 20.0f;
+    rover_set_constant_speed(canyon_speed, canyon_speed);
+    float wall_direction = (float)sensor_distance_right - (float)sensor_distance_left;
+
+    // about to hit a wall so let's make a decision QUICK
+    if(sensor_distance_forward){ 
+        rover_set_constant_speed(0, 0);
+        rover_turn_degrees(90, 0.25f, 0.0f, (wall_direction > 0) ? COUNTERCLOCKWISE : CLOCKWISE);
+    } 
+
+    if(is_on_line()){
+        rover_turn_degrees(90, 0.25f, 0.0f, (wall_direction > 0) ? COUNTERCLOCKWISE : CLOCKWISE);
+        state = state_follow_line;
+        return;
+    }
+    // else {
+    //     if(wall_direction > 0.01){
+            
+    //     } else if (wall_direction < -0.01){
+
+    //     }
+    // }
 }
 
 void state_antenna_seek(){
@@ -151,21 +199,32 @@ void state_antenna_seek(){
 }
 
 void state_find_line(){
-    int not_on_line_cycles = 0;
-    while(not_on_line_cycles < 3) {
-        rover_move_distance(4.0, 0.3f, MOTOR_BWD);
-        not_on_line_cycles++;
+    // int not_on_line_cycles = 0;
 
+    // while(not_on_line_cycles < 3) {
+    //     rover_move_distance(4.0, 0.3f, MOTOR_BWD);
+    //     not_on_line_cycles++;
+
+    //     if(is_on_line()){
+    //         state = last_signifigant_state;
+    //     }
+    // }
+    
+    rover_set_constant_speed(-6, -6);
+    initialize_timer_1(1);
+    while(!flag_timer_1_elapsed){
         if(is_on_line()){
             state = last_signifigant_state;
+            return;
         }
     }
-    
     state = state_panic;
 }
 
 void state_panic(){
-
+    rover_set_constant_speed(0.0f, 0.0f); // hit the breaks!!!
+    wait_for_input(); // wait for us to move it back to the right spot
+    state = last_signifigant_state;
 }
 
 void state_final(){

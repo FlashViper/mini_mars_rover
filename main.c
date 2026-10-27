@@ -12,13 +12,22 @@ int main(){
     initialize_debug();
     
     initialize_rover_logic();
+    enable_debug_led();
+    wait_for_input();
+    disable_debug_led();
     
-    while(1){
-        disable_debug_led();
-        wait_for_input();
-        
+    if(!sensor_line_center){
+        rover_turn_degrees(45, 0.2, 0, CLOCKWISE);
+        rover_turn_degrees(45, 0.2, 0, COUNTERCLOCKWISE);
+        while(1){}
+        return 0;
+    } else {
         test_line_follow();
-        // rover_logic_run();
+        return 0;
+    }
+    
+    while(1){        
+        rover_logic_run();
     }
     return 0;
 }
