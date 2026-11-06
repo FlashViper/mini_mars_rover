@@ -3,12 +3,14 @@
 #include "rover_timing.h"
 #include "rover_motors.h"
 #include "debug.h"
+#include "laser.h"
 #include "rover_milestones.h"
 
 int main(){
     initialize_rover_timing();
     initialize_rover_sensors();
     initialize_rover_motors();
+    initialize_laser();
     initialize_debug();
 
     if(DEBUG_BUTTON_PRESSED){

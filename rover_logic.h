@@ -5,6 +5,7 @@
 #include "rover_motors.h"
 #include "line_following.h"
 #include "constants.h"
+#include "laser.h"
 #include "debug.h"
 
 
