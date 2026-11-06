@@ -18,7 +18,10 @@ void state_follow_line();
 void state_sample_collect();
 void state_sample_deposit();
 void state_canyon();
+void state_look_for_lander();
+void state_enter_lander();
 void state_antenna_seek();
+
 void state_find_line();
 void state_panic();
 void state_final();
@@ -132,7 +135,7 @@ void state_follow_line(){
     // (1) line disappears + see wall ahead or to side --> state_canyon
     // (2) IR sensor detects something --> state_sample_collect
     // (3) see walls to side + still sees line --> state_sample_deposit
-    // (4) reach leftward fork in road --> state_antenna_seek
+    // (4) all other missions accomplished --> state_look_for_lander
 
     // Condition (1)
     if(!flag_canyon_navigated && !is_on_line() && sensor_distance_left && sensor_distance_right){
@@ -154,7 +157,7 @@ void state_follow_line(){
 
     // Condition (4)
     if(flag_canyon_navigated && flag_collected_sample && flag_deposited_sample){
-        state = state_antenna_seek;
+        state = state_look_for_lander;
         return;
     }
 
@@ -201,9 +204,30 @@ void state_canyon(){
     // }
 }
 
+void state_look_for_lander() {
+    follow_line_with_right_sensor_only(&line_follower_slow_accurate);
+    if(sensor_line_left && sensor_line_right){
+        state = state_enter_lander;
+    }
+}
+
+void state_enter_lander(){
+    rover_turn_degrees(90, 0.1f, 0.0f, CLOCKWISE);
+
+    static PID line_follower_in_reverse = line_follower_slow_accurate;
+    line_follower_in_reverse.base_speed *= -1; // make sure we're following it in reverse since we're backing in :)
+
+    while(is_on_line()){
+        follow_line_with_pid(&line_follower_in_reverse);
+    }
+
+    // move backwards
+    rover_set_constant_speed(0.0f, 0.0f);
+    state = state_antenna_seek;
+}
+
 void state_antenna_seek(){
-    // navegate to the lander
-    // then point antenna up at the thing
+    // point antenna up at the thing
     // can't be that hard right?
 }
 

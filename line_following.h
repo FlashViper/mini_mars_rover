@@ -103,4 +103,36 @@ float follow_line_with_pid(const PID *pid_parameters){
     return speed_adjustment;
 }
 
+// this state exists so that we can use the leftmost pid sensor to scan for if there is a 
+float follow_line_with_right_sensor_only(const PID *pid_parameters){
+    static float previous_error = 0.0f;
+    // right sensor on, middle sensor off: STRAIGHT (0)
+    // right sensor off, middle sensor on: RIGHT (1)
+    // right sensor on, middle sensor on: LEFT (-1)
+    // both sensors off: HARD RIGHT
+    // float error = (float)(1 - sensor_line_center) - (float)(sensor_line_right);
+    float error = 0.0f;
+    // let's hard code this for now
+    if(sensor_line_right){
+        if(sensor_line_center){
+            error = -1.0f;
+        }
+    } else if (sensor_line_center){
+        error = 1;
+    } else {
+        error = 1.5f;
+    }
+
+    float adjustment = (pid_parameters->k_p) * error + (error - previous_error) * pid_parameters->k_d;
+
+    rover_set_constant_speed(
+        pid_parameters->base_speed + adjustment,
+        pid_parameters->base_speed - adjustment
+    );
+
+    previous_error = error;
+
+    return adjustment;
+}
+
 #endif
