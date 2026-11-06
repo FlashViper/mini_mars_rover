@@ -17,6 +17,11 @@ static unsigned short sensor_line_left = 0;
 static unsigned short sensor_line_center = 0;
 static unsigned short sensor_line_right = 0;
 
+static unsigned short sensor_ball_color = 0;
+
+static unsigned short sensor_ir_sample = 0;
+static unsigned short sensor_ir_antenna = 0;
+
 void update_line_sensors();
 
 void initialize_rover_sensors(){
