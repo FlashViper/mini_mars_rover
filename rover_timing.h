@@ -19,6 +19,9 @@
 #define PWM_2_PERIOD_REGISTER OC2RS
 #define PWM_2_DUTY_CYCLE_REGISTER OC2R
 
+#define PWM_3_PERIOD_REGISTER OC3RS
+#define PWM_3_DUTY_CYCLE_REGISTER OC3R
+
 void initialize_rover_timing();
 void set_timer_ticks_per_second(unsigned short timer_id, unsigned int ticks_per_second);
 
@@ -26,8 +29,10 @@ void set_timer_ticks_per_second(unsigned short timer_id, unsigned int ticks_per_
 // Note: setting them directly won't work. call set_pwm_X_(period/duty_cycle)
 static int pwm_1_period;
 static int pwm_2_period;
+static int pwm_3_period;
 static float pwm_1_duty_cycle = 0.5;
 static float pwm_2_duty_cycle = 0.5;
+static float pwm_3_duty_cycle = 0.5;
 
 unsigned short flag_timer_1_elapsed = FALSE;
 unsigned short flag_timer_1_counting = FALSE;
@@ -37,6 +42,8 @@ void set_pwm_1_period(int pulses_per_second);
 void set_pwm_1_duty_cycle(float duty_cycle); // cycle is between 0 (0%) and 1 (100%)
 void set_pwm_2_period(int pulses_per_second);
 void set_pwm_2_duty_cycle(float duty_cycle); // cycle is between 0 (0%) and 1 (100%)
+void set_pwm_3_period(int pulses_per_second);
+void set_pwm_3_duty_cycle(float duty_cycle); // cycle is between 0 (0%) and 1 (100%)
 
 
 
@@ -65,6 +72,11 @@ void initialize_rover_timing() {
     // set pwm pulses to timer 5 instead of built in oscilator
     OC2CON1bits.OCTSEL = 0b011;
 
+    // Initialize pwm three on pin B1
+    OC3CON1 = 0x1c06; // magic registers
+    OC3CON2 = 0x001f; // ditto
+    // set pwm pulses to timer 5 instead of built in oscilator
+    OC3CON1bits.OCTSEL = 0b011;
 
     T1CON = 0x0000; // reset timer 1
     TIMER_1.TON = 0; // disable timer 1 by default
@@ -123,6 +135,21 @@ void set_pwm_2_duty_cycle(float duty_cycle) {
     PWM_2_DUTY_CYCLE_REGISTER = pwm_2_duty_cycle * pwm_2_period;
 }
 
+void set_pwm_3_period(int pulses_per_second) {
+    pwm_3_period = OSCILATOR_SPEED / T5_PRESCALER / pulses_per_second / 2; // math?
+    PWM_3_PERIOD_REGISTER = pwm_1_period;
+    set_pwm_3_duty_cycle(pwm_1_duty_cycle); // update the duty cycle
+}
+
+// cycle is between 0 (0%) and 1 (100%)
+void set_pwm_3_duty_cycle(float duty_cycle) {
+    // clamp between 0 and 1
+    if(duty_cycle < 0.001f) pwm_3_duty_cycle = 0.0f;
+    else if (duty_cycle > 1.0f) pwm_3_duty_cycle = 1.0f;
+    else pwm_3_duty_cycle = duty_cycle;
+
+    PWM_1_DUTY_CYCLE_REGISTER = pwm_1_duty_cycle * pwm_1_period;
+}
 
 void set_timer_ticks_per_second(unsigned short timer_id, unsigned int ticks_per_second){
     // TO DO
