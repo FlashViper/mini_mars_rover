@@ -28,6 +28,7 @@ void disable_debug_led(){
 
 void debug_qrd_sensors(){
     disable_debug_led();
+    while(DEBUG_BUTTON_PRESSED){}
 
     while(!DEBUG_BUTTON_PRESSED){
         if(!_RB15){
@@ -37,6 +38,8 @@ void debug_qrd_sensors(){
         }
     }
 
+    while(DEBUG_BUTTON_PRESSED){}
+    
     while(!DEBUG_BUTTON_PRESSED){
         if(!_RB14){
             enable_debug_led();
@@ -44,16 +47,17 @@ void debug_qrd_sensors(){
             disable_debug_led();
         }
     }
-
+    
+    while(DEBUG_BUTTON_PRESSED){}
     while(!DEBUG_BUTTON_PRESSED){
         if(!_RB13){
             enable_debug_led();
         } else {
             disable_debug_led();
         }
+    }
+    while(DEBUG_BUTTON_PRESSED){}
     
-
-
 }
 
 #endif

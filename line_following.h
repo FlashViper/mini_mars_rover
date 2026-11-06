@@ -12,6 +12,8 @@ struct PID {
     float k_p;
     float k_d;
     float k_i;
+    float center_weight;
+    float side_weight;
 };
 
 typedef struct {
@@ -19,6 +21,8 @@ typedef struct {
     float k_p;
     float k_d;
     float k_i;
+    float center_weight;
+    float side_weight;
 } PID;
 
 // This one is so far 100% accurate on all segments of the course
@@ -29,16 +33,20 @@ typedef struct {
 // k_p tuned pretty well already. k_d needs to be tuned
 // k_i likely not needed
 const PID line_follower_slow_accurate = {
-    16.0f, 15.0f, 0.5f, 0
+    22.0f, 15.0f, 10.0f, 0, 1.0f, 1.0f
 };
 
 // 
 const PID line_follower_fast_reckless = {
-    40.0f, 25.0f, 2.5f, 0
+    40.0f, 25.0f, 10.0f, 0, 2.0, 1.0
+};
+
+const PID line_follower_fast_start = {
+    40.0f, 18.0f, 6.0f, 0, 1.0, 1.0
 };
 
 
-float calculate_line_sensor_error() {
+float calculate_line_sensor_error(float center_weight, float side_weight) {
     // we have to convert to floats because if not the robot will turn into a BANSHEE from the hit book series harry potter
     // I think it's because they're unsigned and subtracting them causes an integer overflow
     // then it converts that to an error
@@ -76,14 +84,14 @@ float calculate_line_sensor_error() {
 
     // fun fact, it's faster for a computer to multiply by a reciprocal than to divide
     // that's why it's (... * 0.5) instead of (... / 2)
-    return 0.5f * (center_adjustment + left_right_difference);
+    return (center_weight * center_adjustment + side_weight * left_right_difference) / (center_weight + side_weight);
 }
 
 
 float follow_line_with_pid(const PID *pid_parameters){
     static float previous_error = 0.0f;
 
-    float error = calculate_line_sensor_error();
+    float error = calculate_line_sensor_error(pid_parameters->center_weight, pid_parameters->side_weight);
     float speed_adjustment = (pid_parameters->k_p) * error + (error - previous_error) * pid_parameters->k_d;
     
     rover_set_constant_speed(

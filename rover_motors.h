@@ -173,6 +173,10 @@ void rover_set_constant_speed(float left_speed, float right_speed){
     set_individual_motor_speed(MOTOR_RIGHT, right_speed);
 }
 
+void rover_set_fwd_speed(float speed){
+    set_individual_motor_speed(MOTOR_BOTH, speed);
+}
+
 
 // INTERNAL FUNCTIONS -----------------------------------------------------
 

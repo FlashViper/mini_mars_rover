@@ -31,7 +31,8 @@ void initialize_rover_logic(){
     flag_collected_sample = FALSE;
     flag_deposited_sample = FALSE;
     flag_canyon_navigated = FALSE;
-    state = state_initial;
+    // state = state_initial;
+    state = state_follow_line;
 }
 
 void wait_for_input(){
@@ -49,25 +50,34 @@ void state_initial(){
     // then turn left :)
     enable_debug_led();
     static int flag_found_line = FALSE;
+    static long countdown = 2;
 
     last_signifigant_state = state_initial;
-    rover_set_constant_speed(14.0f, 14.0f);
-
+    
     if(!flag_found_line){
+        rover_set_fwd_speed(16.0f);
         if(is_on_line()) 
             flag_found_line = TRUE;
 
         return;
-    } else if (is_on_line()) {
-        follow_line_with_pid(&line_follower_slow_accurate); // change to reckless later ?
-        // follow_line_with_pid(&line_follower_fast_reckless);
+    } else if (countdown > 0) {
+        // follow_line_with_pid(&line_follower_slow_accurate); // change to reckless later ?
+        follow_line_with_pid(&line_follower_fast_start);
+        if(!is_on_line()){
+            countdown -= 1;
+        }
+
         return;
     }
 
     disable_debug_led();
-    // rover_move_distance(4, 0.3, MOTOR_BWD);
-    rover_turn_degrees(95, 0.24f, 0.0f, COUNTERCLOCKWISE);
+    // rover_turn_degrees(100, 0.24f, 0.0f, COUNTERCLOCKWISE);
+    while(!sensor_line_center){
+        rover_set_constant_speed(-14.0f, 14.0);
+    }
+    wait_for_input();
     state = state_follow_line;
+    // }
 }
 
 void state_follow_line(){
@@ -98,19 +108,19 @@ void state_follow_line(){
     const float speed_threshold = 1.0f; // probably needs to be bigger
     const float weight = 0.98f; // might need to be ~0.999f because of the oscilator speed
     float speed_variance = 0.0f;
-    
+
     if(reckless_mode_allowed && reckless_mode){
         speed_variance = follow_line_with_pid(&line_follower_fast_reckless);
-        disable_debug_led();
+        enable_debug_led();
 
-        if(!sensor_line_center || absolute_value_float(avg_speed_variance) > speed_threshold) {
+        if(!sensor_line_center && absolute_value_float(avg_speed_variance) > 0.5 * line_follower_fast_reckless.base_speed) {
             reckless_mode = DISABLED;
         }
     } else {
-        enable_debug_led();
+        disable_debug_led();
         speed_variance = follow_line_with_pid(&line_follower_slow_accurate);
 
-        if (sensor_line_center && absolute_value_float(avg_speed_variance) < speed_threshold) {
+        if (sensor_line_center && absolute_value_float(avg_speed_variance) < 0.5 * line_follower_slow_accurate.base_speed) {
             reckless_mode = ENABLED;
         }
     }
@@ -150,10 +160,9 @@ void state_follow_line(){
 
     // Finally, if none of the above conditions triggered and we still can't find the line,
     // switch states to state_find_line
-    if(!is_on_line()){
-        state = state_find_line;
-        return;
-    }
+    // if(!is_on_line() && absolute_value_float(speed_variance) < 2.0f){
+    //     return;
+    // }
 }
 
 void state_sample_collect(){

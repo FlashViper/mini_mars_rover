@@ -1,5 +1,5 @@
 {
-    "mplab.clangd.compileCommandsDir": "${workspaceFolder}\\_build\\Mini_Mars_Rover\\default",
+    "mplab.clangd.compileCommandsDir": "${workspaceFolder}/_build/Mini_Mars_Rover/default",
     "mplab.clangd.arguments": [
         "--header-insertion=never"
     ],

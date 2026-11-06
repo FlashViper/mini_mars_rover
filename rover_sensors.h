@@ -62,9 +62,8 @@ void update_line_sensors(){
     // invert because high voltage means it's over a dark surface
     // (condition) ? <true value> : <false value> is a shortcut for using if statements
     sensor_line_left = _RB15 ? FALSE : TRUE; 
-    sensor_line_right = _RB14 ? FALSE : TRUE;
-    sensor_line_center = _RB13 ? FALSE : TRUE;
-    // sensor_line_center = _RB13 ? FALSE : TRUE;
+    sensor_line_center = _RB14 ? FALSE : TRUE;
+    sensor_line_right = _RB13 ? FALSE : TRUE;
 }
 
 unsigned short is_on_line() {
