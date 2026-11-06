@@ -26,9 +26,13 @@ void state_find_line();
 void state_panic();
 void state_final();
 
+// the current state :)
 // function is a handy type that was defined in constants.c
+// we're using it in place of an enum because it's easier to read
 static function state = state_initial;
-static function last_signifigant_state = state_follow_line; // the state it will fall back to in an emergency
+
+// the state it will fall back to in an emergency
+static function last_signifigant_state = state_follow_line;
 
 void initialize_rover_logic(){
     flag_collected_sample = FALSE;
@@ -48,6 +52,9 @@ void rover_logic_run(){
     state();
 }
 
+// robot's starting state
+// follow the starting line until it disappears
+// then turn 90 degrees to the left and start line following mode
 void state_initial(){
     // follow line until you come to a crossroads
     // then turn left :)
@@ -83,6 +90,11 @@ void state_initial(){
     // }
 }
 
+// the BIG BEAFY state
+// this is what's running when none of the other tasks are
+// see line_following.h for more details on how that works
+// it dynamically switches between slower and faster PID parameters based on
+// how curvy the line is (although this still has to be tuned)
 void state_follow_line(){
     last_signifigant_state = state_follow_line;
 
@@ -168,18 +180,22 @@ void state_follow_line(){
     // }
 }
 
+// state for picking up the ping pong ball
+// should back into the sample collector
 void state_sample_collect(){
     // find the sample container using IR and center yourself
     // then push the button
 }
 
+// state for dropping off the ping pong ball
+// should check what color the ball is and go from there
 void state_sample_deposit(){
     // determine which box it needs to go into
     // then navegate to the box and put it in :)
 }
 
+// state for navegating the canyon
 void state_canyon(){
-    // navegate the canyonx
     const float canyon_speed = 20.0f;
     rover_set_constant_speed(canyon_speed, canyon_speed);
     float wall_direction = (float)sensor_distance_right - (float)sensor_distance_left;
@@ -195,15 +211,13 @@ void state_canyon(){
         state = state_follow_line;
         return;
     }
-    // else {
-    //     if(wall_direction > 0.01){
-            
-    //     } else if (wall_direction < -0.01){
-
-    //     }
-    // }
 }
 
+// once all tasks have been completed, the robot knows the lander is coming right up
+// we switch to a special version of the line following algorithm designed only to use the right two qrd sensors
+// then we use the left to detect the fork in the road
+// in the future we might want to track the distance we've traveled on average and use that to count the number of tiles
+// that we've probably traveled, then use that as another metric for switching to this state
 void state_look_for_lander() {
     follow_line_with_right_sensor_only(&line_follower_slow_accurate);
     if(sensor_line_left && sensor_line_right){
@@ -232,17 +246,6 @@ void state_antenna_seek(){
 }
 
 void state_find_line(){
-    // int not_on_line_cycles = 0;
-
-    // while(not_on_line_cycles < 3) {
-    //     rover_move_distance(4.0, 0.3f, MOTOR_BWD);
-    //     not_on_line_cycles++;
-
-    //     if(is_on_line()){
-    //         state = last_signifigant_state;
-    //     }
-    // }
-    
     rover_set_constant_speed(-6, -6);
     initialize_timer_1(1);
     while(!flag_timer_1_elapsed){
