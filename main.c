@@ -13,7 +13,18 @@ int main(){
     initialize_laser();
     initialize_debug();
 
+    while(1){
+        // if(_RB13 || _RB2 || _RB4){
+        if(sensor_distance_forward || sensor_line_left || sensor_line_right){
+            enable_debug_led();
+        } else {
+            disable_debug_led();
+        }
+
+    }
+
     if(DEBUG_BUTTON_PRESSED){
+        debug_proximity_sensors();
         debug_qrd_sensors();
     }
     
@@ -24,5 +35,6 @@ int main(){
     while(1){        
         rover_logic_run();
     }
+    
     return 0;
 }

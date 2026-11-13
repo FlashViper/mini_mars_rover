@@ -193,6 +193,11 @@ void state_sample_collect(){
 void state_sample_deposit(){
     // determine which box it needs to go into
     // then navegate to the box and put it in :)
+    if(sensor_ball_color > 0){ // white
+        
+    } else {
+        
+    }
 }
 
 // state for navegating the canyon

@@ -60,7 +60,7 @@ void initialize_rover_timing() {
     T5CONbits.TGATE = 0;
 
 
-    // Initialize pwm one on pin [XX]
+    // Initialize pwm one on pin [idk it's on the right side though]
     OC1CON1 = 0x1c06; // magic registers
     OC1CON2 = 0x001f; // ditto
     // set pwm pulses to timer 5 instead of built in oscilator
