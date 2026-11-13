@@ -18,6 +18,10 @@ static unsigned short sensor_distance_left = 0;
 static unsigned short sensor_distance_forward = 0;
 static unsigned short sensor_distance_right = 0;
 
+static float distance_to_wall_left = 0.0f;
+static float distance_to_wall_front = 0.0f;
+static float distance_to_wall_right = 0.0f;
+
 static unsigned short sensor_line_left = 0;
 static unsigned short sensor_line_center = 0;
 static unsigned short sensor_line_right = 0;
