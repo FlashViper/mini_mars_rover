@@ -131,6 +131,21 @@ float follow_line_with_right_sensor_only(const PID *pid_parameters){
     );
 
     previous_error = error;
+    return adjustment;
+}
+
+float follow_wall_with_pid(const PID *pid_parameters){
+    static float previous_error = 0.0f;
+    float error = distance_to_wall_right - distance_to_wall_left;
+    
+    float adjustment = (pid_parameters->k_p) * error + (error - previous_error) * pid_parameters->k_d;
+
+    rover_set_constant_speed(
+        pid_parameters->base_speed + adjustment,
+        pid_parameters->base_speed - adjustment
+    );
+
+    previous_error = error;
 
     return adjustment;
 }
