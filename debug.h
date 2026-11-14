@@ -3,6 +3,7 @@
 
 #include "xc.h"
 #include "constants.h"
+#include "rover_sensors.h"
 
 #define DEBUG_LED _LATB7
 #define DEBUG_BUTTON_PRESSED PORTAbits.RA2
@@ -34,6 +35,11 @@ void enable_debug_led(){
 void disable_debug_led(){
     debug_led_enabled = FALSE;
     DEBUG_LED = debug_led_enabled;
+}
+
+void set_debug_led_state(unsigned short state){
+    if(state) enable_debug_led();
+    else disable_debug_led();
 }
 
 void debug_qrd_sensors(){
@@ -77,8 +83,9 @@ void debug_proximity_sensors(){
     while(DEBUG_BUTTON_PRESSED){}
     
     while(!DEBUG_BUTTON_PRESSED){
+        const float test_distance = 20.0f;
         // if(_RB13 || _RB2 || _RB4){
-        if(DEBUG_WALL_AHEAD || DEBUG_WALL_ON_LEFT || DEBUG_WALL_ON_RIGHT){
+        if(get_wall_distance_center() < test_distance || get_wall_distance_left() < test_distance || get_wall_distance_right() < test_distance){
             enable_debug_led();
         } else {
             disable_debug_led();
@@ -87,4 +94,5 @@ void debug_proximity_sensors(){
 
     while(DEBUG_BUTTON_PRESSED){}
 }
+
 #endif
