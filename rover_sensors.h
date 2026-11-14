@@ -2,9 +2,11 @@
 #define ROVER_SENSORS
 
 #include "xc.h"
+#include "analog_to_digital.h"
 #include "constants.h"
 
 #define CHANGE_NOTIFICATION _CNInterrupt(void)
+#define INCHES_PER_MILLIVOLT 12.0f / 300.0f
 
 #define LEFT_LINE_SENSOR_SEEING_WHITE _RB15
 #define CENTER_LINE_SENSOR_SEEING_WHITE _RB14
@@ -13,6 +15,10 @@
 #define WALL_ON_LEFT _RB2
 #define WALL_AHEAD _RB12
 #define WALL_ON_RIGHT _RB4
+
+#define GET_ULTRASONIC_VOLTAGE_LEFT() read_pin_voltage(ADC1BUF4)
+#define GET_ULTRASONIC_VOLTAGE_CENTER() read_pin_voltage(ADC1BUF14)
+#define GET_ULTRASONIC_VOLTAGE_RIGHT() read_pin_voltage(ADC1BUF12)
 
 static unsigned short sensor_distance_left = 0;
 static unsigned short sensor_distance_forward = 0;
@@ -64,39 +70,55 @@ void initialize_rover_sensors(){
     // _TRISB13 = INPUT;
     // _CN13IE = ENABLED;
     // _CN13PUE = DISABLED;
-    // _CN13PDE = DISABLED;
-    
-        
+    // _CN13PDE = DISABLED;        
     
     // Initialize IR proximity sensors
 
     // Left (temporarily on pin 6 (B2, CN6) until we add in the laser photodiode)
-    _ANSB2 = DIGITAL;
-    _TRISB2 = INPUT;
-    _CN6IE = ENABLED;
-    _CN6PUE = DISABLED;
-    _CN6PDE = ENABLED;
+    // _ANSB2 = DIGITAL;
+    // _TRISB2 = INPUT;
+    // _CN6IE = ENABLED;
+    // _CN6PUE = DISABLED;
+    // _CN6PDE = ENABLED;
 
-    // Right (pin 9 (B4, CN1))
-    _ANSB4 = DIGITAL;
-    _TRISB4 = INPUT;
-    _CN1IE = ENABLED;
-    _CN1PUE = DISABLED;
-    _CN1PDE = ENABLED;
-
-    // Center (pin 16 (B12, CN14))
-    _ANSB12 = DIGITAL;
-    _TRISB12 = INPUT;
-    _CN14IE = ENABLED;
-    _CN14PUE = DISABLED;
-    _CN14PDE = ENABLED;
-
-
-
+    // // Right (pin 9 (B4, CN1))
+    // _ANSB4 = DIGITAL;
+    // _TRISB4 = INPUT;
+    // _CN1IE = ENABLED;
+    // _CN1PUE = DISABLED;
+    // _CN1PDE = ENABLED;
+    
+    // // Center (pin 16 (B12, CN14))
+    // _ANSB12 = DIGITAL;
+    // _TRISB12 = INPUT;
+    // _CN14IE = ENABLED;
+    // _CN14PUE = DISABLED;
+    // _CN14PDE = ENABLED;
+    
     // Enable change notification interrupts
     _CNIE = ENABLED;
     _CNIP = 6; // set priority
     _CNIF = 0; // clear interrupt flag
+    
+    // Initialize Ultrasonic distance sensors
+    // Left (temporarily on pin 6 (B2, CN6) until we add in the laser photodiode)
+    _ANSB2 = ANALOG;
+    _TRISB2 = INPUT;
+
+    // // Right (pin 8 (A3, CN14))
+    _ANSA3 = ANALOG;
+    _TRISA3 = INPUT;
+
+    // // Center (pin 16 (B12, CN14))
+    _ANSB12 = ANALOG;
+    _TRISB12 = INPUT;
+
+    configure_analog_to_digital(3);
+    UNLOCK_ANALOG_TO_DIGITAL_CONFIGURATION();
+    _CSS4 = 1; // enable a2d on pin 6
+    _CSS14 = 1; // enable a2d on pin 8
+    _CSS12 = 1; // enable a2d on pin 16
+    LOCK_ANALOG_TO_DIGITAL_CONFIGURATION();
     
     // Initialize IR Sensor (left)
     // Initialize IR Sensor (right)
@@ -125,6 +147,20 @@ void update_proximity_sensors(){
 unsigned short is_on_line() {
     return sensor_line_center || sensor_line_left || sensor_line_right;
 }
+
+
+float get_wall_distance_left(){
+    return INCHES_PER_MILLIVOLT * GET_ULTRASONIC_VOLTAGE_LEFT();
+}
+
+float get_wall_distance_center(){
+    return INCHES_PER_MILLIVOLT * GET_ULTRASONIC_VOLTAGE_CENTER();
+}
+
+float get_wall_distance_right(){
+    return INCHES_PER_MILLIVOLT * GET_ULTRASONIC_VOLTAGE_RIGHT();
+}
+
 
 // INTERRUPTS -------------------------------------------------
 
