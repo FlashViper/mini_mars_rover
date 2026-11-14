@@ -9,6 +9,9 @@
 #include "laser.h"
 #include "rover_milestones.h"
 
+#define DEBUG 1
+#define NORMAL 0
+
 int main(){
     initialize_rover_timing();
     initialize_rover_sensors();
@@ -16,26 +19,24 @@ int main(){
     initialize_laser();
     initialize_debug();
 
-    while(1){
-        // if(_RB13 || _RB2 || _RB4){
-        if(sensor_distance_forward || sensor_line_left || sensor_line_right){
-            enable_debug_led();
-        } else {
-            disable_debug_led();
-        }
-
-    }
-
+    unsigned short mode = NORMAL;
     if(DEBUG_BUTTON_PRESSED){
+        mode = DEBUG;
         debug_proximity_sensors();
         debug_qrd_sensors();
+        // wait_for_input();
+        // rover_turn_degrees(90, 0.25f, 0, CLOCKWISE);
+        // rover_turn_degrees(90, 0.25f, 0, COUNTERCLOCKWISE);
     }
     
     initialize_rover_logic();
     enable_debug_led();
     wait_for_input();
-    
-    while(1){        
+    disable_debug_led();
+    if(mode == DEBUG){
+        state = state_initial;
+    }
+    while(1){   
         rover_logic_run();
     }
     
