@@ -33,6 +33,10 @@ void test_line_follow(){
     }
 }
 
+void rover_milestone_canyon(){
+    state_canyon_simple();
+}
+
 void run_milestone_5(float distance_fwd, float time_fwd, float time_turn){
     
     enable_debug_led();
