@@ -1,5 +1,6 @@
 #pragma config OSCIOFNC = OFF // turn off the clock output so we can use pin 8 as a digital io
 // #pragma config FNOSC=FRC // 8 MHz oscilator
+// GOOD JOB JOEYYYYYYYYY - Elliot
 #pragma config FWDTEN = OFF
 #pragma config WINDIS = OFF
 
