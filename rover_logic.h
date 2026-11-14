@@ -9,6 +9,9 @@
 #include "debug.h"
 
 
+#define COMPLEX 1
+#define SIMPLE 0
+
 // prigress flags (set to true when we complete part of the course)
 unsigned short flag_collected_sample = FALSE;
 unsigned short flag_deposited_sample = FALSE;
@@ -18,7 +21,9 @@ void state_initial();
 void state_follow_line();
 void state_sample_collect();
 void state_sample_deposit();
-void state_canyon();
+void state_canyon_simple();
+void state_canyon_complex();
+void state_canyon_back_up();
 void state_look_for_lander();
 void state_enter_lander();
 void state_antenna_seek();
@@ -26,6 +31,7 @@ void state_antenna_seek();
 void state_find_line();
 void state_panic();
 void state_final();
+void switch_to_canyon_mode();
 
 // the current state :)
 // function is a handy type that was defined in constants.c
@@ -98,6 +104,7 @@ void state_initial(){
 // how curvy the line is (although this still has to be tuned)
 void state_follow_line(){
     last_signifigant_state = state_follow_line;
+    enable_debug_led();
 
     // we want this to be FAST. But faster controllers are more reckless and miss the line often
     // therefore, we need to switch dynamically between severeal pid values based on how curvy the path is getting
@@ -113,7 +120,7 @@ void state_follow_line(){
     // then if the tile looks straight, switch to the fast pid until you reach the next tile, otherwise move carefully
     // ^^^ this idea is kinda fire not gonna lie. I might try coding that and see which one turns out better
 
-    const unsigned short reckless_mode_allowed = ENABLED; // hard-coded so we can switch it off in software
+    const unsigned short reckless_mode_allowed = DISABLED; // hard-coded so we can switch it off in software
     unsigned short reckless_mode = DISABLED; // disabled at the start
 
     // How do we measure if the robot is going off course? The pid function returns the speed variance, which
@@ -127,13 +134,13 @@ void state_follow_line(){
 
     if(reckless_mode_allowed && reckless_mode){
         speed_variance = follow_line_with_pid(&line_follower_fast_reckless);
-        enable_debug_led();
+        disable_debug_led();
 
         if(!sensor_line_center && absolute_value_float(avg_speed_variance) > 0.5 * line_follower_fast_reckless.base_speed) {
             reckless_mode = DISABLED;
         }
     } else {
-        disable_debug_led();
+        enable_debug_led();
         speed_variance = follow_line_with_pid(&line_follower_slow_accurate);
 
         if (sensor_line_center && absolute_value_float(avg_speed_variance) < 0.5 * line_follower_slow_accurate.base_speed) {
@@ -150,23 +157,34 @@ void state_follow_line(){
     // (3) see walls to side + still sees line --> state_sample_deposit
     // (4) all other missions accomplished --> state_look_for_lander
 
+
+    float wall_distance_left = get_wall_distance_left();
+    float wall_distance_right = get_wall_distance_right();
+    float wall_distance_center = get_wall_distance_center();
+    const float wall_detection_distance = 7.5f;
+
+    if(wall_distance_center < 3.5f){
+        rover_move_distance(5.0f, 0.3f, MOTOR_BWD);
+        if(!is_on_line() && (wall_distance_left < wall_detection_distance || wall_distance_right < wall_detection_distance)) switch_to_canyon_mode();
+    }
+
     // Condition (1)
-    if(!flag_canyon_navigated && !is_on_line() && sensor_distance_left && sensor_distance_right){
-        state = state_canyon;
+    if(!flag_canyon_navigated && !is_on_line() && wall_distance_left < wall_detection_distance && wall_distance_right < wall_detection_distance && wall_distance_center < 22.0f){        
+        switch_to_canyon_mode();
         return;
     }
     
     // Condition (2)
-    if(sensor_distance_right && !sensor_distance_left){
-        state = state_sample_collect;
-        return;
-    }
+    // if(sensor_distance_right && !sensor_distance_left){
+    //     state = state_sample_collect;
+    //     return;
+    // }
 
     // Condition (3)
-    if((flag_collected_sample && !flag_deposited_sample) && sensor_distance_left && sensor_distance_right && (is_on_line())){
-        state = state_sample_deposit;
-        return;
-    }
+    // if((flag_collected_sample && !flag_deposited_sample) && sensor_distance_left && sensor_distance_right && (is_on_line())){
+    //     state = state_sample_deposit;
+    //     return;
+    // }
 
     // Condition (4)
     if(flag_canyon_navigated && flag_collected_sample && flag_deposited_sample){
@@ -201,22 +219,67 @@ void state_sample_deposit(){
 }
 
 // state for navegating the canyon
-void state_canyon(){
-    const float canyon_speed = 20.0f;
+void state_canyon_simple(){
+    const float canyon_speed = 28.0f;
     rover_set_constant_speed(canyon_speed, canyon_speed);
-    float wall_direction = (float)sensor_distance_right - (float)sensor_distance_left;
-
+    
+    float wall_direction = (clamp(get_wall_distance_right(), 0, 18) - clamp(get_wall_distance_left(), 0, 18)) / 18;
     // about to hit a wall so let's make a decision QUICK
-    if(sensor_distance_forward){ 
+    if(get_wall_distance_center() < 12.0f){ 
         rover_set_constant_speed(0, 0);
-        rover_turn_degrees(90, 0.25f, 0.0f, (wall_direction > 0) ? COUNTERCLOCKWISE : CLOCKWISE);
+        if(get_wall_distance_center() < 5.0f) rover_move_distance(5, 0.2, MOTOR_BWD);
+        
+        unsigned int turn_left = wall_direction < 0;
+        set_debug_led_state(turn_left);
+        rover_turn_degrees(90, 0.2f, 0.0f, (turn_left) ? COUNTERCLOCKWISE : CLOCKWISE);
+        disable_debug_led();
     } 
 
     if(is_on_line()){
-        rover_turn_degrees(90, 0.25f, 0.0f, (wall_direction > 0) ? COUNTERCLOCKWISE : CLOCKWISE);
+        while(is_on_line()){
+            rover_set_fwd_speed(canyon_speed);
+        }
+        rover_turn_degrees(90, 0.25f, 0.0f, (wall_direction < 0) ? COUNTERCLOCKWISE : CLOCKWISE);
+        if(get_wall_distance_center() < 7.0f){
+            rover_move_distance(5.0, 0.2f, MOTOR_BWD);
+            rover_turn_degrees(180, 0.35, 0, CLOCKWISE);
+        }
         state = state_follow_line;
         return;
     }
+}
+
+void state_canyon_complex(){
+    // disable_debug_led();
+    const PID pid_canyon = {
+        28.0f, 45.0f, 4.5f, 0.0, 1.0, 0.8f
+    };
+
+    float error = follow_wall_with_pid(&pid_canyon, 3.0f, 10, 24);
+    set_debug_led_state(get_wall_distance_center() < 12.0f);
+
+    if(get_wall_distance_center() < 5){
+        rover_move_distance(7.0f, 0.5, MOTOR_BWD);
+
+        float wall_direction = get_wall_distance_right() - get_wall_distance_left();
+        unsigned short turn_direction = wall_direction > 0 ? CLOCKWISE : COUNTERCLOCKWISE;
+        while(get_wall_distance_center() < 12){
+            short multiplier = turn_direction == CLOCKWISE ? -1 : 1;
+            rover_set_constant_speed(-pid_canyon.base_speed * multiplier, pid_canyon.base_speed * multiplier);
+        }
+        // if(absolute_value_float(wall_direction) > 3){
+        //     rover_turn_degrees(90, 0.4, 0, wall_direction > 0 ? CLOCKWISE : COUNTERCLOCKWISE);
+        // }
+    }
+    if(is_on_line()){
+        state = state_follow_line;
+    }
+}
+
+void state_canyon_back_up(){
+    // rover_set_constant_speed(0, 0);
+    rover_move_distance(7.0f, 0.5, MOTOR_BWD);
+    state = state_canyon_complex;
 }
 
 // once all tasks have been completed, the robot knows the lander is coming right up
@@ -273,6 +336,17 @@ void state_final(){
     // do nothing
     // or maybe do a little victory dance
     // either way, you're done!!!
+}
+
+void switch_to_canyon_mode(){
+    const unsigned short canyon_mode = COMPLEX;
+    if(canyon_mode == COMPLEX){
+        state = state_canyon_complex;
+    } else {
+        rover_move_distance(7.0f, 0.25, MOTOR_FWD);
+        state = state_canyon_simple;
+    }
+
 }
 
 #endif
