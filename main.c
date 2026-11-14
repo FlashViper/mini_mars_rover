@@ -1,3 +1,6 @@
+#pragma config OSCIOFNC = OFF // turn off the clock output so we can use pin 8 as a digital io
+// #pragma config FNOSC=FRC // 8 MHz oscilator
+
 #include "rover_sensors.h"
 #include "rover_logic.h"
 #include "rover_timing.h"
