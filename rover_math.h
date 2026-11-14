@@ -28,4 +28,10 @@ float absolute_value_float(float input){
     return (input >= 0) ? input : -input;
 }
 
+float clamp(float input, float min, float max){
+    if(input > max) return max;
+    else if (input < min) return min;
+    else return input;
+}
+
 #endif
