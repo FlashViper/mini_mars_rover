@@ -33,8 +33,13 @@ typedef struct {
 // k_p tuned pretty well already. k_d needs to be tuned
 // k_i likely not needed
 const PID line_follower_slow_accurate = {
-    22.0f, 15.0f, 10.0f, 0, 1.0f, 1.0f
+    27.0f, 19.0f, 40.0f, 0, 1.0f, 1.0f
 };
+
+// const PID line_follower_slow_accurate = {
+//     20.0f, 13.0f, 18.0f, 0, 1.0f, 1.0f
+// };
+
 
 // 
 const PID line_follower_fast_reckless = {
@@ -134,9 +139,13 @@ float follow_line_with_right_sensor_only(const PID *pid_parameters){
     return adjustment;
 }
 
-float follow_wall_with_pid(const PID *pid_parameters){
+float follow_wall_with_pid(const PID *pid_parameters, float center_weight, float max_range_side, float max_range_center){
     static float previous_error = 0.0f;
-    float error = distance_to_wall_right - distance_to_wall_left;
+    const float max_distance = 15.0f;
+    float left = clamp(get_wall_distance_left(), 0, max_range_side) / max_distance;
+    float right = clamp(get_wall_distance_right(), 0, max_range_side) / max_distance;
+    float center = clamp(get_wall_distance_center(), 0, max_range_center) / max_distance;
+    float error = (right - left) * (1 + (1 - center) * center_weight);
     
     float adjustment = (pid_parameters->k_p) * error + (error - previous_error) * pid_parameters->k_d;
 
