@@ -16,10 +16,16 @@
                 }
             ],
             "fileSet": "default",
-            "toolchain": "default-XC-DSC"
+            "toolchain": "default-XC-DSC",
+            "userVariables": "default-uservariables"
         }
     ],
     "propertyGroups": [
+        {
+            "name": "default-uservariables",
+            "type": "uservariables",
+            "properties": {}
+        },
         {
             "name": "default-XC-DSC",
             "type": "toolchain",
@@ -30,6 +36,14 @@
             "name": "default-tool-base",
             "type": "tool",
             "properties": {}
+        },
+        {
+            "name": "default-debug",
+            "type": "debug",
+            "provider": "microchip.mplab-core-da:DebugPropertyGroup",
+            "properties": {
+                "useOnDemandDebugStrategy": true
+            }
         }
     ],
     "fileSets": [
