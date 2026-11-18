@@ -148,7 +148,7 @@ void set_pwm_3_duty_cycle(float duty_cycle) {
     else if (duty_cycle > 1.0f) pwm_3_duty_cycle = 1.0f;
     else pwm_3_duty_cycle = duty_cycle;
 
-    PWM_1_DUTY_CYCLE_REGISTER = pwm_1_duty_cycle * pwm_1_period;
+    PWM_3_DUTY_CYCLE_REGISTER = pwm_3_duty_cycle * pwm_3_period;
 }
 
 void set_timer_ticks_per_second(unsigned short timer_id, unsigned int ticks_per_second){
