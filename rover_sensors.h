@@ -4,6 +4,7 @@
 #include "xc.h"
 #include "analog_to_digital.h"
 #include "constants.h"
+#include "rover_math.h"
 
 #define CHANGE_NOTIFICATION _CNInterrupt(void)
 #define INCHES_PER_MILLIVOLT 12.0f / 300.0f
@@ -11,10 +12,6 @@
 #define LEFT_LINE_SENSOR_SEEING_WHITE _RB15
 #define CENTER_LINE_SENSOR_SEEING_WHITE _RB14
 #define RIGHT_LINE_SENSOR_SEEING_WHITE _RB13
-
-#define WALL_ON_LEFT _RB2
-#define WALL_AHEAD _RB12
-#define WALL_ON_RIGHT _RB4
 
 #define GET_ULTRASONIC_VOLTAGE_LEFT() read_pin_voltage(ADC1BUF4)
 #define GET_ULTRASONIC_VOLTAGE_CENTER() read_pin_voltage(ADC1BUF14)
@@ -138,6 +135,14 @@ void update_line_sensors(){
     sensor_line_right = RIGHT_LINE_SENSOR_SEEING_WHITE ? FALSE : TRUE;
 }
 
+float sharp_sensor_voltage_to_distance(float voltage){
+    float voltage_clamped = clamp(voltage, 0, 3.3);
+    float voltage_squared = voltage_clamped * voltage_clamped;
+    // constants obtained by fitting a cubic polynomial to measured voltage data
+    // https://www.desmos.com/calculator/kthettnjcz
+    return (-2.05556f) * (voltage_squared * voltage_clamped) + (14.84557) * (voltage_squared) - (37.03919) * (voltage_clamped) + (36.07323);
+}
+
 void update_proximity_sensors(){
     sensor_distance_left = WALL_ON_LEFT ? TRUE : FALSE;
     sensor_distance_forward = WALL_AHEAD ? TRUE : FALSE;
@@ -154,12 +159,14 @@ float get_wall_distance_left(){
 }
 
 float get_wall_distance_center(){
-    return INCHES_PER_MILLIVOLT * GET_ULTRASONIC_VOLTAGE_CENTER();
+    // return INCHES_PER_MILLIVOLT * GET_ULTRASONIC_VOLTAGE_CENTER();
+    return sharp_sensor_voltage_to_distance(GET_ULTRASONIC_VOLTAGE_CENTER());
 }
 
 float get_wall_distance_right(){
     return INCHES_PER_MILLIVOLT * GET_ULTRASONIC_VOLTAGE_RIGHT();
 }
+
 
 
 // INTERRUPTS -------------------------------------------------
