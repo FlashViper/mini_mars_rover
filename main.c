@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "laser.h"
 #include "rover_milestones.h"
+#include "servo.h"
 
 #define DEBUG 1
 #define NORMAL 0
@@ -20,6 +21,7 @@ int main(){
     initialize_rover_sensors();
     initialize_rover_motors();
     initialize_laser();
+    initialize_servo();
     initialize_debug();
 
     unsigned short mode = NORMAL;
