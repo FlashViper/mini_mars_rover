@@ -95,4 +95,28 @@ void debug_proximity_sensors(){
     while(DEBUG_BUTTON_PRESSED){}
 }
 
+void debug_proximity_sensors_individually(){
+    disable_debug_led();
+    const float test_distance = 5.0f;
+
+    while(DEBUG_BUTTON_PRESSED){}
+
+    while(!DEBUG_BUTTON_PRESSED){
+        set_debug_led_state(get_wall_distance_left() < test_distance);
+    }
+
+    while(DEBUG_BUTTON_PRESSED){}
+    
+    while(!DEBUG_BUTTON_PRESSED){
+        set_debug_led_state(get_wall_distance_center() < test_distance);
+    }
+    
+    while(DEBUG_BUTTON_PRESSED){}
+    while(!DEBUG_BUTTON_PRESSED){
+        set_debug_led_state(get_wall_distance_right() < test_distance);
+    }
+
+    while(DEBUG_BUTTON_PRESSED){}
+
+}
 #endif
