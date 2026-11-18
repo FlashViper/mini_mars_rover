@@ -34,4 +34,12 @@ float clamp(float input, float min, float max){
     else return input;
 }
 
+float get_percent_between(float input, float min, float max){
+    return (input - min) / (max - min);
+}
+
+float get_percent_between_clamped(float input, float min, float max){
+    return clamp(get_percent_between(input, min, max), 0, 1);
+}
+
 #endif
