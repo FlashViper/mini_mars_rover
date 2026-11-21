@@ -25,3 +25,37 @@ void set_servo_angle(float angle){
 }
 
 #endif
+
+
+// #include "xc.h"
+// #pragma FNOSC = FRCDIV // Default postscaler is divide by 2
+
+// int main(void) {
+//     _RCDIV = 0b010; //Divide by 4 postscaler
+//     OC3CON1 = 0;
+//     OC3CON2 = 0;
+//     OC3CON1bits.OCTSEL = 0b111;
+//     OC3CON2bits.SYNCSEL = 0b11111;
+//     OC3CON2bits.OCTRIG = 0;
+//     OC3RS = 20000;
+//     OC3R = 500;
+    
+//     OC3CON1bits.OCM = 0b110; // Start PWM on pin 14. Set to zero to disable.
+    
+//     while(1){
+//         while(OC3R<1000)
+//         {
+//             OC3R++;
+            
+//             for(int i = 0; i<100; i++);
+//         }
+//         while(OC3R>500)
+//         {
+//             OC3R--;
+            
+//             for(int i = 0; i<100; i++);
+//         }
+//     }        
+    
+//     return 0;
+// }
