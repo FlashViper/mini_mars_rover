@@ -22,7 +22,7 @@ void set_servo_angle(float angle){
 
     float angle_percent = (corrected_angle - ANGLE_MIN) / (ANGLE_MAX - ANGLE_MIN);
     float duty_cycle_seconds = angle_percent * (MAX_ANGLE_PULSE_LENGTH - MIN_ANGLE_PULSE_LENGTH) + MIN_ANGLE_PULSE_LENGTH;
-    float cycle_percent = duty_cycle_seconds / SERVO_FREQUENCY;
+    float cycle_percent = duty_cycle_seconds * SERVO_FREQUENCY;
     set_pwm_3_duty_cycle(cycle_percent);
 }
 
