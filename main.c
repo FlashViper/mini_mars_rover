@@ -24,10 +24,16 @@ int main(){
     initialize_servo();
     initialize_debug();
 
+    // float angle = 0.0f;
+    // int counting_up = TRUE;
+    // set_servo_angle(90);
+    // enable_debug_led();
+    
     unsigned short mode = NORMAL;
     if(DEBUG_BUTTON_PRESSED){
         mode = DEBUG;
-        debug_proximity_sensors();
+        // debug_proximity_sensors();
+        debug_proximity_sensors_individually();
         debug_qrd_sensors();
         // wait_for_input();
         // rover_turn_degrees(90, 0.25f, 0, CLOCKWISE);

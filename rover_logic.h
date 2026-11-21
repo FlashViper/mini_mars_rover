@@ -42,7 +42,8 @@ static function state = state_initial;
 static function last_signifigant_state = state_follow_line;
 
 void initialize_rover_logic(){
-    flag_collected_sample = FALSE;
+    // flag_collected_sample = FALSE;
+    flag_collected_sample = TRUE;
     flag_deposited_sample = FALSE;
     flag_canyon_navigated = FALSE;
     // state = state_initial;
@@ -163,7 +164,7 @@ void state_follow_line(){
     float wall_distance_center = get_wall_distance_center();
     const float wall_detection_distance = 7.5f;
 
-    if(wall_distance_center < 3.5f){
+    if(wall_distance_center < 5.0f){
         rover_move_distance(5.0f, 0.3f, MOTOR_BWD);
         if(!is_on_line() && (wall_distance_left < wall_detection_distance || wall_distance_right < wall_detection_distance)) switch_to_canyon_mode();
     }
@@ -181,16 +182,16 @@ void state_follow_line(){
     // }
 
     // Condition (3)
-    // if((flag_collected_sample && !flag_deposited_sample) && sensor_distance_left && sensor_distance_right && (is_on_line())){
-    //     state = state_sample_deposit;
-    //     return;
-    // }
-
-    // Condition (4)
-    if(flag_canyon_navigated && flag_collected_sample && flag_deposited_sample){
-        state = state_look_for_lander;
+    if((flag_collected_sample && !flag_deposited_sample) && (wall_distance_left < 10 && wall_distance_right < 10 && wall_detection_distance > 12) && (is_on_line())){
+        state = state_sample_deposit;
         return;
     }
+
+    // Condition (4)
+    // if(flag_canyon_navigated && flag_collected_sample && flag_deposited_sample){
+    //     state = state_look_for_lander;
+    //     return;
+    // }
 
     // Finally, if none of the above conditions triggered and we still can't find the line,
     // switch states to state_find_line
@@ -211,10 +212,25 @@ void state_sample_collect(){
 void state_sample_deposit(){
     // determine which box it needs to go into
     // then navegate to the box and put it in :)
-    if(sensor_ball_color > 0){ // white
+    // if(sensor_ball_color > 0){ // white
         
+    // } else {
+        
+    // }
+
+    rover_turn_degrees(90, 0.25f, -1.0, CLOCKWISE);
+    // rover_move_distance(5.0, 0.1, MOTOR_BWD);
+    rover_turn_degrees(90, 0.25f, -1.0, COUNTERCLOCKWISE);
+    state = state_follow_line;
+}
+
+void switch_to_canyon_mode(){
+    const unsigned short canyon_mode = COMPLEX;
+    if(canyon_mode == COMPLEX){
+        state = state_canyon_complex;
     } else {
-        
+        rover_move_distance(7.0f, 0.25, MOTOR_FWD);
+        state = state_canyon_simple;
     }
 }
 
@@ -252,10 +268,10 @@ void state_canyon_simple(){
 void state_canyon_complex(){
     // disable_debug_led();
     const PID pid_canyon = {
-        28.0f, 45.0f, 4.5f, 0.0, 1.0, 0.8f
+        28.0f, 40.0f, 4.5f, 0.0, 1.0, 0.3f
     };
 
-    float error = follow_wall_with_pid(&pid_canyon, 3.0f, 10, 24);
+    float error = follow_wall_with_pid(&pid_canyon, 11.5f, 10);
     set_debug_led_state(get_wall_distance_center() < 12.0f);
 
     if(get_wall_distance_center() < 5){
@@ -263,13 +279,11 @@ void state_canyon_complex(){
 
         float wall_direction = get_wall_distance_right() - get_wall_distance_left();
         unsigned short turn_direction = wall_direction > 0 ? CLOCKWISE : COUNTERCLOCKWISE;
-        while(get_wall_distance_center() < 12){
-            short multiplier = turn_direction == CLOCKWISE ? -1 : 1;
-            rover_set_constant_speed(-pid_canyon.base_speed * multiplier, pid_canyon.base_speed * multiplier);
+        
+        if(absolute_value_float(wall_direction) > 3){
+            rover_turn_degrees(45, 0.15, 0, wall_direction > 0 ? CLOCKWISE : COUNTERCLOCKWISE);
+            if(get_wall_distance_center() < 5.0f) rover_turn_degrees(45, 0.15, 0, wall_direction > 0 ? CLOCKWISE : COUNTERCLOCKWISE);
         }
-        // if(absolute_value_float(wall_direction) > 3){
-        //     rover_turn_degrees(90, 0.4, 0, wall_direction > 0 ? CLOCKWISE : COUNTERCLOCKWISE);
-        // }
     }
     if(is_on_line()){
         state = state_follow_line;
@@ -338,15 +352,5 @@ void state_final(){
     // either way, you're done!!!
 }
 
-void switch_to_canyon_mode(){
-    const unsigned short canyon_mode = COMPLEX;
-    if(canyon_mode == COMPLEX){
-        state = state_canyon_complex;
-    } else {
-        rover_move_distance(7.0f, 0.25, MOTOR_FWD);
-        state = state_canyon_simple;
-    }
-
-}
 
 #endif

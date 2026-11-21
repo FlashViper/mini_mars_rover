@@ -32,13 +32,22 @@ typedef struct {
 // ---------------------------------------------------------------------
 // k_p tuned pretty well already. k_d needs to be tuned
 // k_i likely not needed
-const PID line_follower_slow_accurate = {
-    27.0f, 19.0f, 40.0f, 0, 1.0f, 1.0f
-};
+// const PID line_follower_slow_accurate = {
+//     40.0f, 35.0f, 50.0f, 0, 1.0f, 1.0f
+// };
 
 // const PID line_follower_slow_accurate = {
-//     20.0f, 13.0f, 18.0f, 0, 1.0f, 1.0f
+//     35.0f, 25.0f, 60.0f, 0, 1.0f, 2.5f
 // };
+
+
+// const PID line_follower_slow_accurate = {
+//     27.0f, 19.0f, 60.0f, 0, 1.0f, 2.0f
+// };
+
+const PID line_follower_slow_accurate = {
+    20.0f, 13.0f, 18.0f, 0, 1.0f, 1.0f
+};
 
 
 // 
@@ -139,14 +148,23 @@ float follow_line_with_right_sensor_only(const PID *pid_parameters){
     return adjustment;
 }
 
-float follow_wall_with_pid(const PID *pid_parameters, float center_weight, float max_range_side, float max_range_center){
+float follow_wall_with_pid(const PID *pid_parameters, float max_range_side, float max_range_center){
     static float previous_error = 0.0f;
-    const float max_distance = 15.0f;
-    float left = clamp(get_wall_distance_left(), 0, max_range_side) / max_distance;
-    float right = clamp(get_wall_distance_right(), 0, max_range_side) / max_distance;
-    float center = clamp(get_wall_distance_center(), 0, max_range_center) / max_distance;
-    float error = (right - left) * (1 + (1 - center) * center_weight);
+    const float min_distance = 4.5f;  // minimum distance to a wall (this would evaluate to 0)
+    // max_range_side/max_range_center would evaluate to 1
+
+    // Clamp the ultrasonic sensor readouts wall between 0 (super close to a wall) and 1 (super far from a wall)
+    float left = get_percent_between_clamped(get_wall_distance_left(), min_distance, max_range_side);
+    float right = get_percent_between_clamped(get_wall_distance_right(), min_distance, max_range_side);
+    float center = get_percent_between_clamped(get_wall_distance_center(), min_distance, max_range_center);
+
+    // if a wall is close on the right but far on the left, steer left (meaning error ~ -1)
+    // if a wall is close on the left but far on the right, steer right (meaning error ~ 1)
+    // so we do error = right - left, which evaluates to 1
+    // but when we come up on a wall we really want to turn, so the closer we get to the wall the closer the error gets to two
+    float error = (right - left) * (1 + (1 - center) * pid_parameters->center_weight);
     
+    // now we're just doing standard pid stuff
     float adjustment = (pid_parameters->k_p) * error + (error - previous_error) * pid_parameters->k_d;
 
     rover_set_constant_speed(

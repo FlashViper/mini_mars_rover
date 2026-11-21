@@ -17,13 +17,6 @@
 #define GET_ULTRASONIC_VOLTAGE_CENTER() read_pin_voltage(ADC1BUF14)
 #define GET_ULTRASONIC_VOLTAGE_RIGHT() read_pin_voltage(ADC1BUF12)
 
-static unsigned short sensor_distance_left = 0;
-static unsigned short sensor_distance_forward = 0;
-static unsigned short sensor_distance_right = 0;
-
-static float distance_to_wall_left = 0.0f;
-static float distance_to_wall_front = 0.0f;
-static float distance_to_wall_right = 0.0f;
 
 static unsigned short sensor_line_left = 0;
 static unsigned short sensor_line_center = 0;
@@ -136,18 +129,18 @@ void update_line_sensors(){
 }
 
 float sharp_sensor_voltage_to_distance(float voltage){
-    float voltage_clamped = clamp(voltage, 0, 3.3);
+    float voltage_clamped = clamp(voltage / 1000, 0, 3.3f);
     float voltage_squared = voltage_clamped * voltage_clamped;
     // constants obtained by fitting a cubic polynomial to measured voltage data
     // https://www.desmos.com/calculator/kthettnjcz
-    return (-2.05556f) * (voltage_squared * voltage_clamped) + (14.84557) * (voltage_squared) - (37.03919) * (voltage_clamped) + (36.07323);
+    return (-2.05556f) * (voltage_squared * voltage_clamped) + (14.84557f) * (voltage_squared) - (37.03919f) * (voltage_clamped) + (36.07323f);
 }
 
-void update_proximity_sensors(){
-    sensor_distance_left = WALL_ON_LEFT ? TRUE : FALSE;
-    sensor_distance_forward = WALL_AHEAD ? TRUE : FALSE;
-    sensor_distance_right = WALL_ON_RIGHT ? TRUE : FALSE;
-}
+// void update_proximity_sensors(){
+//     sensor_distance_left = WALL_ON_LEFT ? TRUE : FALSE;
+//     sensor_distance_forward = WALL_AHEAD ? TRUE : FALSE;
+//     sensor_distance_right = WALL_ON_RIGHT ? TRUE : FALSE;
+// }
 
 unsigned short is_on_line() {
     return sensor_line_center || sensor_line_left || sensor_line_right;
@@ -159,8 +152,8 @@ float get_wall_distance_left(){
 }
 
 float get_wall_distance_center(){
-    // return INCHES_PER_MILLIVOLT * GET_ULTRASONIC_VOLTAGE_CENTER();
-    return sharp_sensor_voltage_to_distance(GET_ULTRASONIC_VOLTAGE_CENTER());
+    return INCHES_PER_MILLIVOLT * GET_ULTRASONIC_VOLTAGE_CENTER();
+    // return sharp_sensor_voltage_to_distance(GET_ULTRASONIC_VOLTAGE_CENTER());
 }
 
 float get_wall_distance_right(){
@@ -175,7 +168,7 @@ float get_wall_distance_right(){
 INTERRUPT CHANGE_NOTIFICATION {
     _CNIF = 0; // clear interrupt flag
     update_line_sensors();
-    update_proximity_sensors();
+    // update_proximity_sensors();
 }
 
 #endif
