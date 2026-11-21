@@ -33,8 +33,10 @@ int main(){
     if(DEBUG_BUTTON_PRESSED){
         mode = DEBUG;
         // debug_proximity_sensors();
+        set_servo_angle(85);
         debug_proximity_sensors_individually();
         debug_qrd_sensors();
+        set_servo_angle(10);
         // wait_for_input();
         // rover_turn_degrees(90, 0.25f, 0, CLOCKWISE);
         // rover_turn_degrees(90, 0.25f, 0, COUNTERCLOCKWISE);
