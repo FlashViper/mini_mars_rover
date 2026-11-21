@@ -10,6 +10,8 @@
 #define ANGLE_MAX 180
 
 void initialize_servo(){
+    // configure servo on pin 5 (B1)
+    _ANSB1 = DIGITAL;
     set_pwm_3_period(SERVO_FREQUENCY);
 }
 
