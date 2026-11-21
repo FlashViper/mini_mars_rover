@@ -137,8 +137,8 @@ void set_pwm_2_duty_cycle(float duty_cycle) {
 
 void set_pwm_3_period(int pulses_per_second) {
     pwm_3_period = OSCILATOR_SPEED / T5_PRESCALER / pulses_per_second / 2; // math?
-    PWM_3_PERIOD_REGISTER = pwm_1_period;
-    set_pwm_3_duty_cycle(pwm_1_duty_cycle); // update the duty cycle
+    PWM_3_PERIOD_REGISTER = pwm_3_period;
+    set_pwm_3_duty_cycle(pwm_3_duty_cycle); // update the duty cycle
 }
 
 // cycle is between 0 (0%) and 1 (100%)
