@@ -182,7 +182,7 @@ void state_follow_line(){
     // }
 
     // Condition (3)
-    if((flag_collected_sample && !flag_deposited_sample) && (wall_distance_left < 10 && wall_distance_right < 10 && wall_detection_distance > 12) && (is_on_line())){
+    if((flag_collected_sample && !flag_deposited_sample) && (wall_distance_left < 10 && wall_distance_right < 10 && wall_distance_center > 12) && (is_on_line())){
         state = state_sample_deposit;
         return;
     }
@@ -268,7 +268,7 @@ void state_canyon_simple(){
 void state_canyon_complex(){
     // disable_debug_led();
     const PID pid_canyon = {
-        28.0f, 40.0f, 4.5f, 0.0, 1.0, 0.3f
+        28.0f, 40.0f, 4.5f, 0.0, 1.0, 0.9f
     };
 
     float error = follow_wall_with_pid(&pid_canyon, 11.5f, 10);
@@ -282,7 +282,7 @@ void state_canyon_complex(){
         
         if(absolute_value_float(wall_direction) > 3){
             rover_turn_degrees(45, 0.15, 0, wall_direction > 0 ? CLOCKWISE : COUNTERCLOCKWISE);
-            if(get_wall_distance_center() < 5.0f) rover_turn_degrees(45, 0.15, 0, wall_direction > 0 ? CLOCKWISE : COUNTERCLOCKWISE);
+            if(get_wall_distance_center() < 8.0f) rover_turn_degrees(45, 0.15, 0, wall_direction > 0 ? CLOCKWISE : COUNTERCLOCKWISE);
         }
     }
     if(is_on_line()){
