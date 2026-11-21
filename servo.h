@@ -3,7 +3,7 @@
 
 #include "rover_timing.h"
 
-#define SERVO_FREQUENCY 50.0f // servo runs on 50 Hz
+#define SERVO_FREQUENCY 50.0f * 2 // servo runs on 50 Hz
 #define MIN_ANGLE_PULSE_LENGTH 0.5e-3f // seconds
 #define MAX_ANGLE_PULSE_LENGTH 2.5e-3f // seconds
 #define ANGLE_MIN 0
