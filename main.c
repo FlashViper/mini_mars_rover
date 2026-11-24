@@ -29,6 +29,11 @@ int main(){
     // set_servo_angle(90);
     // enable_debug_led();
     
+    while(1){
+        if(DEBUG_BUTTON_PRESSED) enable_laser();
+        else disable_laser();
+    }
+    return 0;
     unsigned short mode = NORMAL;
     if(DEBUG_BUTTON_PRESSED){
         mode = DEBUG;

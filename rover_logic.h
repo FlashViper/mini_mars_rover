@@ -48,6 +48,7 @@ void initialize_rover_logic(){
     flag_canyon_navigated = FALSE;
     // state = state_initial;
     state = state_follow_line;
+    disable_laser();
 }
 
 void wait_for_input(){
@@ -67,6 +68,7 @@ void state_initial(){
     // follow line until you come to a crossroads
     // then turn left :)
     enable_debug_led();
+    disable_laser();
     static int flag_found_line = FALSE;
     static long countdown = 2;
 
@@ -268,7 +270,7 @@ void state_canyon_simple(){
 void state_canyon_complex(){
     // disable_debug_led();
     const PID pid_canyon = {
-        28.0f, 40.0f, 4.5f, 0.0, 1.0, 0.9f
+        28.0f, 40.0f, 4.5f, 0.0, 1.0, 1.75f
     };
 
     float error = follow_wall_with_pid(&pid_canyon, 11.5f, 10);
@@ -281,8 +283,8 @@ void state_canyon_complex(){
         unsigned short turn_direction = wall_direction > 0 ? CLOCKWISE : COUNTERCLOCKWISE;
         
         if(absolute_value_float(wall_direction) > 3){
-            rover_turn_degrees(45, 0.15, 0, wall_direction > 0 ? CLOCKWISE : COUNTERCLOCKWISE);
-            if(get_wall_distance_center() < 8.0f) rover_turn_degrees(45, 0.15, 0, wall_direction > 0 ? CLOCKWISE : COUNTERCLOCKWISE);
+            rover_turn_degrees(45, 0.15, 0, turn_direction);
+            if(get_wall_distance_center() < 8.0f) rover_turn_degrees(45, 0.15, 0, turn_direction);
         }
     }
     if(is_on_line()){
@@ -292,7 +294,7 @@ void state_canyon_complex(){
 
 void state_canyon_back_up(){
     // rover_set_constant_speed(0, 0);
-    rover_move_distance(7.0f, 0.5, MOTOR_BWD);
+    rover_move_distance(18.0f, 0.5, MOTOR_BWD);
     state = state_canyon_complex;
 }
 
@@ -326,6 +328,28 @@ void state_enter_lander(){
 void state_antenna_seek(){
     // point antenna up at the thing
     // can't be that hard right?
+    float max_voltage = 0;
+    float max_voltage_angle = 0;
+    float current_angle = 0;
+    const float base_angle = 1.0f;
+    const float max_angle = 70.0f;
+
+    for(int i = 0; i < max_angle; i++){
+        set_servo_angle(current_angle);
+        float average_voltage = 0.0f;
+        for(int ticks = 0; ticks < 3000; ticks++){
+            average_voltage += SENSOR_IR_ANTENNA_VOLTAGE;
+        }
+        if(average_voltage > max_voltage){
+            max_voltage = average_voltage;
+            max_voltage_angle = current_angle;
+        }
+        current_angle += 2.0f;
+    }
+
+    set_servo_angle(max_voltage_angle);
+    enable_laser();
+    state = state_final;
 }
 
 void state_find_line(){

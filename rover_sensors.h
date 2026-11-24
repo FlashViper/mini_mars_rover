@@ -9,6 +9,10 @@
 #define CHANGE_NOTIFICATION _CNInterrupt(void)
 #define INCHES_PER_MILLIVOLT 12.0f / 300.0f
 
+// TO DO: UPDATE PLEASE!!!!!
+#define BUFFER_ID_SAMPLE ADC1BUF1
+#define BUFFER_ID_ANTENNA ADC1BUF1
+
 #define LEFT_LINE_SENSOR_SEEING_WHITE _RB15
 #define CENTER_LINE_SENSOR_SEEING_WHITE _RB14
 #define RIGHT_LINE_SENSOR_SEEING_WHITE _RB13
@@ -17,15 +21,15 @@
 #define GET_ULTRASONIC_VOLTAGE_CENTER() read_pin_voltage(ADC1BUF14)
 #define GET_ULTRASONIC_VOLTAGE_RIGHT() read_pin_voltage(ADC1BUF12)
 
+#define SENSOR_IR_SAMPLE_VOLTAGE read_pin_voltage(BUFFER_ID_SAMPLE) / 1000 // convert to V from mV
+#define SENSOR_IR_ANTENNA_VOLTAGE read_pin_voltage(BUFFER_ID_ANTENNA) / 1000 // convert to V from mV
+
 
 static unsigned short sensor_line_left = 0;
 static unsigned short sensor_line_center = 0;
 static unsigned short sensor_line_right = 0;
 
 static unsigned short sensor_ball_color = 0;
-
-static unsigned short sensor_ir_sample = 0;
-static unsigned short sensor_ir_antenna = 0;
 
 void update_line_sensors();
 
